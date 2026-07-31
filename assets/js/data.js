@@ -31,32 +31,32 @@ const DATA = {
   /* --- Trending Data --- */
   trending: {
     hashtags: [
-      { tag:"#SkincareRoutine", platform:"tiktok", region:"vn", posts:"2.3M", growth:"+45%", hot:true },
-      { tag:"#KBeauty", platform:"tiktok", region:"global", posts:"18.7M", growth:"+32%", hot:true },
-      { tag:"#美白护肤", platform:"tiktok", region:"cn", posts:"8.4M", growth:"+28%", hot:true },
-      { tag:"#GlassSkin", platform:"instagram", region:"global", posts:"5.2M", growth:"+38%", hot:true },
-      { tag:"#日本护肤", platform:"youtube", region:"jp", posts:"3.1M", growth:"+22%", hot:false },
-      { tag:"#VitaminCSerum", platform:"youtube", region:"us", posts:"1.9M", growth:"+51%", hot:true },
-      { tag:"#datrắng", platform:"tiktok", region:"vn", posts:"1.4M", growth:"+29%", hot:false },
-      { tag:"#台灣美妝", platform:"instagram", region:"tw", posts:"0.9M", growth:"+17%", hot:false },
-      { tag:"#SunscreenSPF50", platform:"tiktok", region:"global", posts:"4.7M", growth:"+44%", hot:true },
-      { tag:"#Retinol", platform:"youtube", region:"us", posts:"2.8M", growth:"+67%", hot:true }
+      { tag:"#SkincareRoutine", platform:"tiktok",    region:"vn",     posts:"2.3M",  growth:"+45%", hot:true  },
+      { tag:"#KBeauty",         platform:"tiktok",    region:"global", posts:"18.7M", growth:"+32%", hot:true  },
+      { tag:"#美白护肤",          platform:"tiktok",    region:"cn",     posts:"8.4M",  growth:"+28%", hot:true  },
+      { tag:"#GlassSkin",       platform:"instagram", region:"global", posts:"5.2M",  growth:"+38%", hot:true  },
+      { tag:"#日本护肤",          platform:"youtube",   region:"jp",     posts:"3.1M",  growth:"+22%", hot:false },
+      { tag:"#VitaminCSerum",   platform:"youtube",   region:"us",     posts:"1.9M",  growth:"+51%", hot:true  },
+      { tag:"#datrắng",         platform:"tiktok",    region:"vn",     posts:"1.4M",  growth:"+29%", hot:false },
+      { tag:"#台灣美妝",          platform:"instagram", region:"tw",     posts:"0.9M",  growth:"+17%", hot:false },
+      { tag:"#SunscreenSPF50",  platform:"tiktok",    region:"global", posts:"4.7M",  growth:"+44%", hot:true  },
+      { tag:"#Retinol",         platform:"youtube",   region:"us",     posts:"2.8M",  growth:"+67%", hot:true  }
     ],
     categories: [
-      { name:"Serum Vitamin C", share:28, trend:"up" },
-      { name:"Kem chống nắng", share:22, trend:"up" },
-      { name:"Toner nước hoa hồng", share:18, trend:"stable" },
-      { name:"Kem dưỡng ban đêm", share:15, trend:"up" },
-      { name:"Son môi & Tint", share:12, trend:"down" },
-      { name:"Retinol / Niacinamide", share:5, trend:"up" }
+      { name:"Serum Vitamin C",        share:28, trend:"up"     },
+      { name:"Kem chống nắng",         share:22, trend:"up"     },
+      { name:"Toner nước hoa hồng",    share:18, trend:"stable" },
+      { name:"Kem dưỡng ban đêm",      share:15, trend:"up"     },
+      { name:"Son môi & Tint",         share:12, trend:"down"   },
+      { name:"Retinol / Niacinamide",  share:5,  trend:"up"     }
     ],
     formats: [
-      { format:"Before/After (30 ngày)", effectiveness:95, icon:"🔄" },
-      { format:"Unboxing & First Impression", effectiveness:88, icon:"📦" },
-      { format:"Get Ready With Me", effectiveness:82, icon:"💄" },
-      { format:"Skincare Routine Vlog", effectiveness:79, icon:"🎬" },
-      { format:"Top 5 / Best of", effectiveness:74, icon:"🏆" },
-      { format:"Myth Busting", effectiveness:68, icon:"🔬" }
+      { format:"Before/After (30 ngày)",        effectiveness:95, icon:"🔄" },
+      { format:"Unboxing & First Impression",   effectiveness:88, icon:"📦" },
+      { format:"Get Ready With Me",             effectiveness:82, icon:"💄" },
+      { format:"Skincare Routine Vlog",         effectiveness:79, icon:"🎬" },
+      { format:"Top 5 / Best of",              effectiveness:74, icon:"🏆" },
+      { format:"Myth Busting",                 effectiveness:68, icon:"🔬" }
     ]
   },
 
@@ -238,30 +238,30 @@ const DATA = {
 
   /* --- Campaigns --- */
   campaigns: [
-    { id:1, name:"Ra mắt Serum Vitamin C Ultra Bright", status:"active", startDate:"2024-12-01", endDate:"2025-01-31", budget:"80,000,000", platforms:["tiktok","instagram","facebook"], description:"Chiến dịch ra mắt dòng serum Vitamin C mới nhắm vào tệp 18-30 tuổi quan tâm đến làm trắng da và chống oxy hóa.", progress:45, kol:"Tier 2-3 KOL (10 người)" },
-    { id:2, name:"Tết Ất Tỵ — Gift Set Cao Cấp", status:"planning", startDate:"2025-01-10", endDate:"2025-02-05", budget:"120,000,000", platforms:["tiktok","youtube","facebook"], description:"Campaign Tết tập trung vào gift set premium. Thông điệp tặng quà ý nghĩa cho người thân yêu.", progress:15, kol:"KOL Tier 1 (3 người) + Tier 2 (8 người)" },
-    { id:3, name:"Summer Glow — Sunscreen Collection", status:"completed", startDate:"2024-05-01", endDate:"2024-07-31", budget:"60,000,000", platforms:["tiktok","instagram"], description:"Chiến dịch mùa hè giới thiệu dòng kem chống nắng cho da nhạy cảm. Viral với hashtag #SummerGlowVN.", progress:100, kol:"Tier 2 KOL (12 người)" },
-    { id:4, name:"11.11 Mega Sale — Bundle Deal", status:"completed", startDate:"2024-11-01", endDate:"2024-11-15", budget:"45,000,000", platforms:["tiktok","facebook","shopee"], description:"Flash sale ngày 11/11 với các bundle deal tiết kiệm 40-60%. Kết hợp countdown video và livestream.", progress:100, kol:"Livestreamer (5 người)" }
+    { id:1, name:"Ra mắt Serum Vitamin C Ultra Bright",   status:"active",    startDate:"2024-12-01", endDate:"2025-01-31", budget:"80,000,000",  platforms:["tiktok","instagram","facebook"], description:"Chiến dịch ra mắt dòng serum Vitamin C mới nhắm vào tệp 18-30 tuổi quan tâm đến làm trắng da và chống oxy hóa.", progress:45,  kol:"Tier 2-3 KOL (10 người)" },
+    { id:2, name:"Tết Ất Tỵ — Gift Set Cao Cấp",          status:"planning",  startDate:"2025-01-10", endDate:"2025-02-05", budget:"120,000,000", platforms:["tiktok","youtube","facebook"],   description:"Campaign Tết tập trung vào gift set premium. Thông điệp tặng quà ý nghĩa cho người thân yêu.",                   progress:15,  kol:"KOL Tier 1 (3 người) + Tier 2 (8 người)" },
+    { id:3, name:"Summer Glow — Sunscreen Collection",     status:"completed", startDate:"2024-05-01", endDate:"2024-07-31", budget:"60,000,000",  platforms:["tiktok","instagram"],           description:"Chiến dịch mùa hè giới thiệu dòng kem chống nắng cho da nhạy cảm. Viral với hashtag #SummerGlowVN.",            progress:100, kol:"Tier 2 KOL (12 người)" },
+    { id:4, name:"11.11 Mega Sale — Bundle Deal",          status:"completed", startDate:"2024-11-01", endDate:"2024-11-15", budget:"45,000,000",  platforms:["tiktok","facebook","shopee"],   description:"Flash sale ngày 11/11 với các bundle deal tiết kiệm 40-60%. Kết hợp countdown video và livestream.",             progress:100, kol:"Livestreamer (5 người)" }
   ],
 
   /* --- Ideas --- */
   ideas: [
-    { id:1, title:"Series 'Thành phần đọc hiểu' — giải mã INCI list", status:"new", priority:"high", category:"Educational", description:"Series video giải thích thành phần mỹ phẩm cho người không chuyên. Mỗi video focus 1 thành phần (Niacinamide, Retinol, AHA/BHA...)", tags:["education","series","skincare"] },
-    { id:2, title:"Challenge #30NgàyDaGlow — UGC Campaign", status:"new", priority:"high", category:"UGC", description:"Tạo hashtag challenge khuyến khích người dùng chụp ảnh da sau 30 ngày dùng sản phẩm. Giải thưởng hấp dẫn.", tags:["UGC","challenge","viral"] },
-    { id:3, title:"Collab với food creator — skincare from inside out", status:"in-progress", priority:"medium", category:"Collab", description:"Kết hợp với food influencer để nói về mối liên hệ giữa dinh dưỡng và da đẹp. Cross-promotion audience.", tags:["collab","food","wellness"] },
-    { id:4, title:"Podcast mini — 'Chuyện làng beauty' cùng chuyên gia", status:"in-progress", priority:"low", category:"Audio", description:"Series podcast ngắn 10-15 phút phỏng vấn bác sĩ da liễu, makeup artist về các chủ đề hot trong ngành beauty.", tags:["podcast","expert","audio"] },
-    { id:5, title:"Video so sánh giá — Drugstore vs High-end", status:"done", priority:"medium", category:"Review", description:"So sánh sản phẩm cùng công dụng ở phân khúc bình dân và cao cấp. Video đã viral 2.1M view.", tags:["review","comparison","drugstore"] },
-    { id:6, title:"Behind-the-scenes team content lab", status:"done", priority:"low", category:"BTS", description:"Video hậu trường quy trình sản xuất content của team. Tăng brand trust và recruitment interest.", tags:["BTS","team","brand"] }
+    { id:1, title:"Series 'Thành phần đọc hiểu' — giải mã INCI list",          status:"new",         priority:"high",   category:"Educational", description:"Series video giải thích thành phần mỹ phẩm cho người không chuyên. Mỗi video focus 1 thành phần (Niacinamide, Retinol, AHA/BHA...)", tags:["education","series","skincare"] },
+    { id:2, title:"Challenge #30NgàyDaGlow — UGC Campaign",                    status:"new",         priority:"high",   category:"UGC",         description:"Tạo hashtag challenge khuyến khích người dùng chụp ảnh da sau 30 ngày dùng sản phẩm. Giải thưởng hấp dẫn.",                          tags:["UGC","challenge","viral"] },
+    { id:3, title:"Collab với food creator — skincare from inside out",         status:"in-progress", priority:"medium", category:"Collab",      description:"Kết hợp với food influencer để nói về mối liên hệ giữa dinh dưỡng và da đẹp. Cross-promotion audience.",                              tags:["collab","food","wellness"] },
+    { id:4, title:"Podcast mini — 'Chuyện làng beauty' cùng chuyên gia",       status:"in-progress", priority:"low",    category:"Audio",       description:"Series podcast ngắn 10-15 phút phỏng vấn bác sĩ da liễu, makeup artist về các chủ đề hot trong ngành beauty.",                       tags:["podcast","expert","audio"] },
+    { id:5, title:"Video so sánh giá — Drugstore vs High-end",                 status:"done",        priority:"medium", category:"Review",      description:"So sánh sản phẩm cùng công dụng ở phân khúc bình dân và cao cấp. Video đã viral 2.1M view.",                                            tags:["review","comparison","drugstore"] },
+    { id:6, title:"Behind-the-scenes team content lab",                        status:"done",        priority:"low",    category:"BTS",         description:"Video hậu trường quy trình sản xuất content của team. Tăng brand trust và recruitment interest.",                                         tags:["BTS","team","brand"] }
   ],
 
   /* --- Team --- */
   team: [
-    { id:1, name:"Nguyễn Thị Hương", role:"Content Lead", emoji:"👩‍💼", skills:["Strategy","Analytics","Copywriting"], email:"huong@mediaos.com", note:"Phụ trách chiến lược nội dung tổng thể và định hướng brand voice" },
-    { id:2, name:"Trần Minh Khoa", role:"Video Creator", emoji:"🎬", skills:["Filming","Editing","CapCut"], email:"khoa@mediaos.com", note:"Chuyên quay và edit video TikTok, Reels. Sở trường Before/After" },
-    { id:3, name:"Lê Thu Trang", role:"Social Media Manager", emoji:"📱", skills:["TikTok","Instagram","Scheduling"], email:"trang@mediaos.com", note:"Quản lý lịch đăng và community management trên các nền tảng" },
-    { id:4, name:"Phạm Quốc Bảo", role:"Research Analyst", emoji:"🔍", skills:["Market Research","Data","Excel"], email:"bao@mediaos.com", note:"Nghiên cứu thị trường, theo dõi xu hướng và phân tích competitors" },
-    { id:5, name:"Đỗ Lan Anh", role:"KOL Manager", emoji:"🤝", skills:["KOL Relations","Negotiation","Campaign"], email:"lanh@mediaos.com", note:"Quản lý mối quan hệ và hợp đồng với KOL/KOC trên tất cả nền tảng" },
-    { id:6, name:"Vũ Hoàng Nam", role:"Graphic Designer", emoji:"🎨", skills:["Photoshop","Canva","Branding"], email:"nam@mediaos.com", note:"Thiết kế creative assets, thumbnail, infographic cho tất cả kênh" }
+    { id:1, name:"Nguyễn Thị Hương", role:"Content Lead",         emoji:"👩‍💼", skills:["Strategy","Analytics","Copywriting"],     email:"huong@mediaos.com", note:"Phụ trách chiến lược nội dung tổng thể và định hướng brand voice" },
+    { id:2, name:"Trần Minh Khoa",   role:"Video Creator",         emoji:"🎬",  skills:["Filming","Editing","CapCut"],             email:"khoa@mediaos.com",  note:"Chuyên quay và edit video TikTok, Reels. Sở trường Before/After" },
+    { id:3, name:"Lê Thu Trang",     role:"Social Media Manager",  emoji:"📱",  skills:["TikTok","Instagram","Scheduling"],        email:"trang@mediaos.com", note:"Quản lý lịch đăng và community management trên các nền tảng" },
+    { id:4, name:"Phạm Quốc Bảo",   role:"Research Analyst",      emoji:"🔍",  skills:["Market Research","Data","Excel"],         email:"bao@mediaos.com",   note:"Nghiên cứu thị trường, theo dõi xu hướng và phân tích competitors" },
+    { id:5, name:"Đỗ Lan Anh",       role:"KOL Manager",           emoji:"🤝",  skills:["KOL Relations","Negotiation","Campaign"], email:"lanh@mediaos.com",  note:"Quản lý mối quan hệ và hợp đồng với KOL/KOC trên tất cả nền tảng" },
+    { id:6, name:"Vũ Hoàng Nam",     role:"Graphic Designer",      emoji:"🎨",  skills:["Photoshop","Canva","Branding"],           email:"nam@mediaos.com",   note:"Thiết kế creative assets, thumbnail, infographic cho tất cả kênh" }
   ],
 
   /* --- Guidelines / SOPs --- */
@@ -270,45 +270,45 @@ const DATA = {
       id:1, category:"research", icon:"🔍",
       title:"Quy trình nghiên cứu nội dung viral hàng tuần",
       steps: [
-        { title:"Bước 1: Quét xu hướng (30 phút — Thứ 2 đầu tuần)", desc:"Mở Viral Research Hub, tìm kiếm theo từ khóa liên quan đến sản phẩm đang campaign. Lọc theo khu vực VN + KR + CN. Lưu ít nhất 10 video đáng tham khảo." },
-        { title:"Bước 2: Phân tích hashtag trending (15 phút)", desc:"Vào Trend Analysis, xem danh sách hashtag đang tăng trưởng mạnh. Ghi nhận 5 hashtag phù hợp để dùng trong tuần." },
-        { title:"Bước 3: Audit competitors (20 phút)", desc:"Kiểm tra 3-5 đối thủ chính: họ đang post format gì? Thành phần nào đang được nói đến? Video nào của họ đang viral?" },
-        { title:"Bước 4: Brief content week (10 phút)", desc:"Tổng hợp insights vào file brief tuần. Đề xuất 3-5 ý tưởng content cho tuần tới dựa trên nghiên cứu." },
-        { title:"Bước 5: Họp team briefing (Thứ 2, 9:00)", desc:"Chia sẻ findings với team, phân công content cho từng người, set deadline cụ thể." }
+        { title:"Bước 1: Quét xu hướng (30 phút — Thứ 2 đầu tuần)",  desc:"Mở Viral Research Hub, tìm kiếm theo từ khóa liên quan đến sản phẩm đang campaign. Lọc theo khu vực VN + KR + CN. Lưu ít nhất 10 video đáng tham khảo." },
+        { title:"Bước 2: Phân tích hashtag trending (15 phút)",       desc:"Vào Trend Analysis, xem danh sách hashtag đang tăng trưởng mạnh. Ghi nhận 5 hashtag phù hợp để dùng trong tuần." },
+        { title:"Bước 3: Audit competitors (20 phút)",                desc:"Kiểm tra 3-5 đối thủ chính: họ đang post format gì? Thành phần nào đang được nói đến? Video nào của họ đang viral?" },
+        { title:"Bước 4: Brief content week (10 phút)",               desc:"Tổng hợp insights vào file brief tuần. Đề xuất 3-5 ý tưởng content cho tuần tới dựa trên nghiên cứu." },
+        { title:"Bước 5: Họp team briefing (Thứ 2, 9:00)",           desc:"Chia sẻ findings với team, phân công content cho từng người, set deadline cụ thể." }
       ]
     },
     {
       id:2, category:"production", icon:"🎬",
       title:"Quy trình sản xuất video TikTok/Reels",
       steps: [
-        { title:"Bước 1: Nhận brief và hiểu mục tiêu", desc:"Đọc kỹ creative brief. Xác định: ai là target audience? Thông điệp chính là gì? CTA là gì? Format phù hợp nhất?" },
-        { title:"Bước 2: Viết script/storyboard", desc:"Viết script chi tiết cho từng cảnh. Hook (3 giây đầu) phải được viết kỹ nhất. Review script với Content Lead trước khi quay." },
-        { title:"Bước 3: Chuẩn bị props và setup", desc:"Chuẩn bị sản phẩm, nền, ánh sáng, tripod. Check pin máy quay. Test âm thanh nếu có VO." },
-        { title:"Bước 4: Quay (Golden hour + Backup shots)", desc:"Quay đủ B-roll: texture, packaging, apply. Quay nhiều góc để có lựa chọn khi edit. Backup tất cả file ngay sau khi quay." },
-        { title:"Bước 5: Edit và caption", desc:"Edit theo template đã approve. Thêm text, âm thanh trending. Viết caption theo công thức AIDA. Chọn cover hấp dẫn." },
-        { title:"Bước 6: Review và approve", desc:"Gửi cho Content Lead review. Chỉnh sửa theo feedback. Khi được approve, submit vào lịch đăng bài." }
+        { title:"Bước 1: Nhận brief và hiểu mục tiêu",               desc:"Đọc kỹ creative brief. Xác định: ai là target audience? Thông điệp chính là gì? CTA là gì? Format phù hợp nhất?" },
+        { title:"Bước 2: Viết script/storyboard",                     desc:"Viết script chi tiết cho từng cảnh. Hook (3 giây đầu) phải được viết kỹ nhất. Review script với Content Lead trước khi quay." },
+        { title:"Bước 3: Chuẩn bị props và setup",                   desc:"Chuẩn bị sản phẩm, nền, ánh sáng, tripod. Check pin máy quay. Test âm thanh nếu có VO." },
+        { title:"Bước 4: Quay (Golden hour + Backup shots)",          desc:"Quay đủ B-roll: texture, packaging, apply. Quay nhiều góc để có lựa chọn khi edit. Backup tất cả file ngay sau khi quay." },
+        { title:"Bước 5: Edit và caption",                            desc:"Edit theo template đã approve. Thêm text, âm thanh trending. Viết caption theo công thức AIDA. Chọn cover hấp dẫn." },
+        { title:"Bước 6: Review và approve",                          desc:"Gửi cho Content Lead review. Chỉnh sửa theo feedback. Khi được approve, submit vào lịch đăng bài." }
       ]
     },
     {
       id:3, category:"publishing", icon:"📅",
       title:"Quy trình lên lịch và đăng bài",
       steps: [
-        { title:"Bước 1: Điền vào content calendar", desc:"Đăng bài vào calendar ít nhất 3 ngày trước ngày đăng. Điền đủ: nền tảng, format, caption, hashtag, giờ đăng, người phụ trách." },
-        { title:"Bước 2: Upload và schedule", desc:"Upload video/ảnh lên nền tảng. Schedule đúng giờ vàng. Kiểm tra caption, hashtag, tag product lần cuối trước khi schedule." },
-        { title:"Bước 3: Community management (30 phút sau đăng)", desc:"Ngay khi bài vừa đăng, trả lời 10-15 comment đầu tiên để boost engagement cho thuật toán." },
-        { title:"Bước 4: Theo dõi performance (24h & 72h)", desc:"Kiểm tra metrics sau 24h và 72h. Nếu video performance thấp hơn benchmark, báo cáo và phân tích nguyên nhân." },
-        { title:"Bước 5: Report weekly", desc:"Mỗi cuối tuần, điền số liệu vào báo cáo weekly. Highlight video best và worst performance, rút kinh nghiệm cho tuần sau." }
+        { title:"Bước 1: Điền vào content calendar",                  desc:"Đăng bài vào calendar ít nhất 3 ngày trước ngày đăng. Điền đủ: nền tảng, format, caption, hashtag, giờ đăng, người phụ trách." },
+        { title:"Bước 2: Upload và schedule",                         desc:"Upload video/ảnh lên nền tảng. Schedule đúng giờ vàng. Kiểm tra caption, hashtag, tag product lần cuối trước khi schedule." },
+        { title:"Bước 3: Community management (30 phút sau đăng)",   desc:"Ngay khi bài vừa đăng, trả lời 10-15 comment đầu tiên để boost engagement cho thuật toán." },
+        { title:"Bước 4: Theo dõi performance (24h & 72h)",          desc:"Kiểm tra metrics sau 24h và 72h. Nếu video performance thấp hơn benchmark, báo cáo và phân tích nguyên nhân." },
+        { title:"Bước 5: Report weekly",                              desc:"Mỗi cuối tuần, điền số liệu vào báo cáo weekly. Highlight video best và worst performance, rút kinh nghiệm cho tuần sau." }
       ]
     },
     {
       id:4, category:"kol", icon:"🤝",
       title:"Quy trình làm việc với KOL/KOC",
       steps: [
-        { title:"Bước 1: Research và vetting KOL", desc:"Dùng Phân tích Viral Research để xem KOL đang hợp tác với brand nào. Kiểm tra: fake follower ratio < 15%, engagement rate > 3%, audience demographics phù hợp." },
-        { title:"Bước 2: Outreach và negotiation", desc:"Liên hệ qua DM hoặc email. Chuẩn bị Media Kit của brand. Thương lượng: số video, format, deadline, giá, quyền sở hữu content." },
-        { title:"Bước 3: Brief KOL", desc:"Gửi KOL brief chi tiết: brand guideline, key messages, sản phẩm cần highlight, những điều KHÔNG được nói. Deadline gửi draft để review." },
-        { title:"Bước 4: Review draft content", desc:"KOL gửi draft 3-5 ngày trước deadline đăng. Review theo checklist: brand voice, key message, CTA, hashtag. Feedback tối đa 1 lần revision." },
-        { title:"Bước 5: Monitor và báo cáo", desc:"Theo dõi performance post của KOL trong 7 ngày đầu. Chụp màn hình số liệu. Tổng hợp vào báo cáo KOL performance cuối campaign." }
+        { title:"Bước 1: Research và vetting KOL",                    desc:"Dùng Phân tích Viral Research để xem KOL đang hợp tác với brand nào. Kiểm tra: fake follower ratio < 15%, engagement rate > 3%, audience demographics phù hợp." },
+        { title:"Bước 2: Outreach và negotiation",                    desc:"Liên hệ qua DM hoặc email. Chuẩn bị Media Kit của brand. Thương lượng: số video, format, deadline, giá, quyền sở hữu content." },
+        { title:"Bước 3: Brief KOL",                                  desc:"Gửi KOL brief chi tiết: brand guideline, key messages, sản phẩm cần highlight, những điều KHÔNG được nói. Deadline gửi draft để review." },
+        { title:"Bước 4: Review draft content",                       desc:"KOL gửi draft 3-5 ngày trước deadline đăng. Review theo checklist: brand voice, key message, CTA, hashtag. Feedback tối đa 1 lần revision." },
+        { title:"Bước 5: Monitor và báo cáo",                        desc:"Theo dõi performance post của KOL trong 7 ngày đầu. Chụp màn hình số liệu. Tổng hợp vào báo cáo KOL performance cuối campaign." }
       ]
     },
     {
@@ -331,14 +331,14 @@ const DATA = {
 
   regions: [
     { id:"global", label:"🌏 Toàn cầu" },
-    { id:"vn", label:"🇻🇳 Việt Nam" },
-    { id:"kr", label:"🇰🇷 Hàn Quốc" },
-    { id:"cn", label:"🇨🇳 Trung Quốc" },
-    { id:"tw", label:"🇹🇼 Đài Loan" },
-    { id:"jp", label:"🇯🇵 Nhật Bản" },
-    { id:"th", label:"🇹🇭 Thái Lan" },
-    { id:"us", label:"🇺🇸 Mỹ" },
-    { id:"eu", label:"🇪🇺 Châu Âu" }
+    { id:"vn",     label:"🇻🇳 Việt Nam" },
+    { id:"kr",     label:"🇰🇷 Hàn Quốc" },
+    { id:"cn",     label:"🇨🇳 Trung Quốc" },
+    { id:"tw",     label:"🇹🇼 Đài Loan" },
+    { id:"jp",     label:"🇯🇵 Nhật Bản" },
+    { id:"th",     label:"🇹🇭 Thái Lan" },
+    { id:"us",     label:"🇺🇸 Mỹ" },
+    { id:"eu",     label:"🇪🇺 Châu Âu" }
   ],
 
   categories: [
@@ -353,56 +353,56 @@ const DATA = {
   ],
 
   platforms: [
-    { id:"all",     label:"Tất cả nền tảng" },
-    { id:"tiktok",  label:"TikTok" },
-    { id:"facebook",label:"Facebook" },
-    { id:"douyin",  label:"Douyin (抖音)" },
-    { id:"rednote", label:"RedNote (小红书)" }
+    { id:"all",      label:"Tất cả nền tảng" },
+    { id:"tiktok",   label:"TikTok" },
+    { id:"facebook", label:"Facebook" },
+    { id:"douyin",   label:"Douyin (抖音)" },
+    { id:"rednote",  label:"RedNote (小红书)" }
   ],
 
   articleCategories: [
-    { id:"all", label:"Tất cả" },
-    { id:"strategy", label:"Chiến lược" },
-    { id:"platform", label:"Nền tảng" },
-    { id:"creative", label:"Sáng tạo" },
+    { id:"all",       label:"Tất cả" },
+    { id:"strategy",  label:"Chiến lược" },
+    { id:"platform",  label:"Nền tảng" },
+    { id:"creative",  label:"Sáng tạo" },
     { id:"analytics", label:"Phân tích" }
   ],
 
   quickSearches: [
-    { label:"🔥 Viral toàn cầu", query:"viral skincare 2024", regions:["global"] },
-    { label:"🇨🇳 美白精华", query:"美白精华 护肤", regions:["cn"] },
-    { label:"🇰🇷 Skincare Hàn", query:"스킨케어 루틴", regions:["kr"] },
-    { label:"🇹🇼 Mỹ phẩm Đài Loan", query:"台灣美妝 保養", regions:["tw"] },
-    { label:"🇯🇵 Beauty Nhật", query:"日本护肤 スキンケア", regions:["jp"] },
-    { label:"🇻🇳 Viral VN", query:"skincare routine viral", regions:["vn"] }
+    { label:"🔥 Viral toàn cầu",       query:"viral skincare 2024",    regions:["global"] },
+    { label:"🇨🇳 美白精华",              query:"美白精华 护肤",           regions:["cn"] },
+    { label:"🇰🇷 Skincare Hàn",         query:"스킨케어 루틴",           regions:["kr"] },
+    { label:"🇹🇼 Mỹ phẩm Đài Loan",    query:"台灣美妝 保養",           regions:["tw"] },
+    { label:"🇯🇵 Beauty Nhật",          query:"日本护肤 スキンケア",     regions:["jp"] },
+    { label:"🇻🇳 Viral VN",             query:"skincare routine viral",  regions:["vn"] }
   ],
 
   statusConfig: {
-    active: { label:"Đang chạy", class:"badge-success" },
-    planning: { label:"Lên kế hoạch", class:"badge-warning" },
-    completed: { label:"Hoàn thành", class:"badge-gray" },
-    paused: { label:"Tạm dừng", class:"badge-error" }
+    active:    { label:"Đang chạy",    class:"badge-success" },
+    planning:  { label:"Lên kế hoạch", class:"badge-warning" },
+    completed: { label:"Hoàn thành",   class:"badge-gray" },
+    paused:    { label:"Tạm dừng",     class:"badge-error" }
   },
 
   priorityConfig: {
-    high: { label:"Cao", emoji:"🔴" },
-    medium: { label:"Trung bình", emoji:"🟡" },
-    low: { label:"Thấp", emoji:"🟢" }
+    high:   { label:"Cao",         emoji:"🔴" },
+    medium: { label:"Trung bình",  emoji:"🟡" },
+    low:    { label:"Thấp",        emoji:"🟢" }
   },
 
   ideaStatusConfig: {
-    "new": { label:"Ý tưởng mới", color:"#3182ce", next:"in-progress", nextLabel:"→ In Progress" },
-    "in-progress": { label:"Đang thực hiện", color:"#d69e2e", next:"done", nextLabel:"→ Hoàn thành" },
-    "done": { label:"Hoàn thành", color:"#38a169", next:"new", nextLabel:"↺ Reopen" }
+    "new":         { label:"Ý tưởng mới",     color:"#3182ce", next:"in-progress", nextLabel:"→ In Progress" },
+    "in-progress": { label:"Đang thực hiện",  color:"#d69e2e", next:"done",        nextLabel:"→ Hoàn thành"  },
+    "done":        { label:"Hoàn thành",      color:"#38a169", next:"new",         nextLabel:"↺ Reopen"      }
   },
 
   platformEmoji: {
-    tiktok:   "🎵",
-    facebook: "👤",
-    douyin:   "🎬",
-    rednote:  "📕",
-    shopee:   "🛒",
-    youtube:  "▶️",
-    instagram:"📸"
+    tiktok:    "🎵",
+    facebook:  "👤",
+    douyin:    "🎬",
+    rednote:   "📕",
+    shopee:    "🛒",
+    youtube:   "▶️",
+    instagram: "📸"
   }
 };
