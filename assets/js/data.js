@@ -1,31 +1,31 @@
 /* ============================================================
-   Lumiaura Content Lab — Static Data
+   MediaOS — Static Data
    ============================================================ */
 
 const DATA = {
 
   /* --- Viral Videos Mock Data --- */
   videos: [
-    { id:1, title:"Routine dưỡng da ban đêm 5 bước siêu đơn giản mà da sáng bóng", platform:"tiktok", region:"vn", views:"2.4M", likes:"187K", comments:"9.2K", shares:"45K", author:"@skincare_vn_official", emoji:"🌙", tags:["nightroutine","dưỡngda","skincare"], category:"skincare", duration:"0:52", date:"2024-12-10" },
-    { id:2, title:"K-Beauty Glass Skin Secret — 10 Steps Korean Skincare Routine", platform:"youtube", region:"kr", views:"5.1M", likes:"312K", comments:"14.8K", shares:"88K", author:"@kbeauty_official", emoji:"✨", tags:["Kbeauty","glassskin","skincare"], category:"skincare", duration:"12:34", date:"2024-11-22" },
-    { id:3, title:"美白精华合集 Top 10 最有效美白产品推荐", platform:"tiktok", region:"cn", views:"8.7M", likes:"521K", comments:"23.1K", shares:"120K", author:"@美妆达人小李", emoji:"💎", tags:["美白","精华","护肤"], category:"whitening", duration:"1:15", date:"2024-12-05" },
-    { id:4, title:"台灣女生最愛底妝 — 平價與高端妝容大比拼", platform:"instagram", region:"tw", views:"1.2M", likes:"98K", comments:"5.4K", shares:"22K", author:"@tw_beauty_queen", emoji:"💄", tags:["底妝","妝容","台灣"], category:"makeup", duration:"0:45", date:"2024-11-30" },
-    { id:5, title:"Nhật Bản skincare bí quyết da trắng không tì vết", platform:"tiktok", region:"jp", views:"3.3M", likes:"245K", comments:"11.2K", shares:"67K", author:"@japan_beauty_tips", emoji:"🌸", tags:["Nhậtbản","skincare","datrắng"], category:"skincare", duration:"0:38", date:"2024-12-01" },
-    { id:6, title:"Thái Lan beauty hack — kem dưỡng 59 baht da như sao", platform:"tiktok", region:"th", views:"1.8M", likes:"134K", comments:"7.1K", shares:"34K", author:"@thai_beauty_secret", emoji:"🌺", tags:["ThaiBeauty","skincare","danh giá"], category:"skincare", duration:"0:43", date:"2024-11-25" },
-    { id:7, title:"Serum Vitamin C Before & After — 30 days real results", platform:"youtube", region:"us", views:"4.2M", likes:"289K", comments:"18.3K", shares:"95K", author:"@skincarebyscience", emoji:"⚗️", tags:["vitaminC","beforeafter","serum"], category:"serum", duration:"8:22", date:"2024-12-08" },
-    { id:8, title:"Best drugstore tinted moisturizer review — European picks", platform:"instagram", region:"eu", views:"0.9M", likes:"72K", comments:"3.8K", shares:"18K", author:"@europeanbeauty", emoji:"🇪🇺", tags:["drugstore","moisturizer","europeanbeauty"], category:"makeup", duration:"0:59", date:"2024-11-18" },
-    { id:9, title:"Son Tint review — 15 màu môi trendy nhất 2024", platform:"tiktok", region:"vn", views:"1.6M", likes:"123K", comments:"6.7K", shares:"29K", author:"@lipstick_queen_vn", emoji:"💋", tags:["sontint","môi","makeup"], category:"makeup", duration:"1:02", date:"2024-12-12" },
-    { id:10, title:"스킨케어 루틴 공개 — 7일 만에 피부가 달라졌어요", platform:"tiktok", region:"kr", views:"6.2M", likes:"441K", comments:"19.4K", shares:"102K", author:"@koreanglowskin", emoji:"🔆", tags:["스킨케어","루틴","피부"], category:"skincare", duration:"0:57", date:"2024-12-03" },
-    { id:11, title:"日本最新防晒霜测评 — SPF50+不泛白推荐", platform:"youtube", region:"jp", views:"2.1M", likes:"156K", comments:"8.9K", shares:"52K", author:"@japan_beauty_lab", emoji:"☀️", tags:["防晒","护肤","推荐"], category:"sunscreen", duration:"9:15", date:"2024-11-20" },
-    { id:12, title:"Toner nào tốt nhất cho da dầu mụn? So sánh 10 sản phẩm", platform:"youtube", region:"vn", views:"0.8M", likes:"61K", comments:"4.2K", shares:"16K", author:"@skincare_review_vn", emoji:"💧", tags:["toner","dadầu","damụn"], category:"toner", duration:"15:30", date:"2024-12-07" },
-    { id:13, title:"Mascara hack — đôi mắt to như búp bê trong 3 phút", platform:"tiktok", region:"vn", views:"3.7M", likes:"298K", comments:"13.5K", shares:"78K", author:"@makeup_magic_vn", emoji:"👁️", tags:["mascara","makeuphack","mắt"], category:"makeup", duration:"0:31", date:"2024-12-09" },
-    { id:14, title:"Retinol beginners guide — avoid these 5 mistakes!", platform:"youtube", region:"us", views:"7.8M", likes:"456K", comments:"25.7K", shares:"134K", author:"@dermatologytips", emoji:"🔬", tags:["retinol","antiaging","skincare"], category:"anti-aging", duration:"11:45", date:"2024-11-15" },
-    { id:15, title:"Natural Korean no-makeup makeup look tutorial", platform:"instagram", region:"kr", views:"2.2M", likes:"178K", comments:"9.8K", shares:"56K", author:"@koreannaturalbeauty", emoji:"🎋", tags:["nomakeup","Kbeauty","tutorial"], category:"makeup", duration:"1:18", date:"2024-12-04" },
-    { id:16, title:"Hướng dẫn chăm sóc da cho học sinh tiết kiệm", platform:"tiktok", region:"vn", views:"1.1M", likes:"89K", comments:"5.1K", shares:"21K", author:"@student_skincare_vn", emoji:"🎒", tags:["tiếtkiệm","học sinh","skincare"], category:"skincare", duration:"0:48", date:"2024-11-28" },
-    { id:17, title:"台灣代購神器 — 日本藥妝必買清單2024", platform:"youtube", region:"tw", views:"1.5M", likes:"108K", comments:"6.3K", shares:"38K", author:"@taiwan_daigou", emoji:"🛒", tags:["代購","日本藥妝","必買"], category:"haul", duration:"18:22", date:"2024-11-12" },
-    { id:18, title:"Face Mist Review — 10 xịt khoáng dưỡng ẩm tốt nhất", platform:"tiktok", region:"vn", views:"0.7M", likes:"54K", comments:"3.1K", shares:"13K", author:"@mist_lover_vn", emoji:"💦", tags:["xịtkhoáng","dưỡngẩm","skincare"], category:"moisturizer", duration:"1:07", date:"2024-12-06" },
-    { id:19, title:"Sunscreen sunscreen — How to pick the right SPF for Asia", platform:"tiktok", region:"th", views:"2.8M", likes:"211K", comments:"10.2K", shares:"58K", author:"@asianskintips", emoji:"🌞", tags:["sunscreen","SPF","skincare"], category:"sunscreen", duration:"0:55", date:"2024-12-02" },
-    { id:20, title:"BHA Exfoliant — trị mụn đầu đen cực hiệu quả", platform:"tiktok", region:"vn", views:"4.5M", likes:"335K", comments:"16.8K", shares:"89K", author:"@acne_fighter_vn", emoji:"🧴", tags:["BHA","mụn","exfoliant"], category:"acne", duration:"0:44", date:"2024-12-11" }
+    { id:1,  title:"Routine dưỡng da ban đêm 5 bước — da sáng bóng sau 7 ngày",       platform:"tiktok",   region:"vn", views:"2.4M", likes:"187K", comments:"9.2K",  shares:"45K",  author:"@skincare_vn_official", emoji:"🌙", tags:["nightroutine","dưỡngda","skincare"],  category:"skincare",      duration:"0:52", date:"2024-12-10", trending:true  },
+    { id:2,  title:"K-Beauty Glass Skin Secret — 10 bước dưỡng da Hàn Quốc",          platform:"rednote",  region:"kr", views:"5.1M", likes:"312K", comments:"14.8K", shares:"88K",  author:"@kbeauty_official",     emoji:"✨", tags:["Kbeauty","glassskin","skincare"],     category:"skincare",      duration:"12:34",date:"2024-11-22", trending:false },
+    { id:3,  title:"美白精华合集 — Top 10 最有效祛斑美白精华推荐",                         platform:"douyin",   region:"cn", views:"8.7M", likes:"521K", comments:"23.1K", shares:"120K", author:"@美妆达人小李",           emoji:"💎", tags:["美白","祛斑","精华"],              category:"lam-trang",     duration:"1:15", date:"2024-12-05", trending:true  },
+    { id:4,  title:"台灣女生保養秘訣 — 祛斑淡斑實測分享",                                  platform:"rednote",  region:"tw", views:"1.2M", likes:"98K",  comments:"5.4K",  shares:"22K",  author:"@tw_beauty_queen",      emoji:"💄", tags:["祛斑","台灣","保養"],              category:"nam-tan-nhang", duration:"0:45", date:"2024-11-30", trending:false },
+    { id:5,  title:"Nhật Bản skincare — bí quyết da trắng sáng không tì vết",          platform:"tiktok",   region:"jp", views:"3.3M", likes:"245K", comments:"11.2K", shares:"67K",  author:"@japan_beauty_tips",    emoji:"🌸", tags:["Nhậtbản","datrắng","skincare"],   category:"skincare",      duration:"0:38", date:"2024-12-01", trending:false },
+    { id:6,  title:"Thái Lan beauty hack — kem dưỡng 59 baht da như sao Hàn",          platform:"tiktok",   region:"th", views:"1.8M", likes:"134K", comments:"7.1K",  shares:"34K",  author:"@thai_beauty_secret",   emoji:"🌺", tags:["ThaiBeauty","skincare","dưỡngẩm"],category:"skincare",      duration:"0:43", date:"2024-11-25", trending:false },
+    { id:7,  title:"Serum Vitamin C Before & After — kết quả thực 30 ngày",            platform:"facebook", region:"us", views:"4.2M", likes:"289K", comments:"18.3K", shares:"95K",  author:"@skincarebyscience",    emoji:"⚗️", tags:["vitaminC","beforeafter","serum"],  category:"serum",         duration:"8:22", date:"2024-12-08", trending:true  },
+    { id:8,  title:"Kem nám dưỡng trắng châu Âu — review chi tiết 10 sản phẩm",        platform:"facebook", region:"eu", views:"0.9M", likes:"72K",  comments:"3.8K",  shares:"18K",  author:"@europeanbeauty",       emoji:"🇪🇺", tags:["kemnam","làmtrắng","dưỡngda"],    category:"kem-nam",       duration:"0:59", date:"2024-11-18", trending:false },
+    { id:9,  title:"Son Tint viral review — 15 màu môi đẹp nhất 2024",                 platform:"tiktok",   region:"vn", views:"1.6M", likes:"123K", comments:"6.7K",  shares:"29K",  author:"@lipstick_queen_vn",    emoji:"💋", tags:["sontint","môi","dadep"],          category:"da-dep",        duration:"1:02", date:"2024-12-12", trending:true  },
+    { id:10, title:"스킨케어 루틴 공개 — 7일 만에 피부가 달라졌어요",                       platform:"tiktok",   region:"kr", views:"6.2M", likes:"441K", comments:"19.4K", shares:"102K", author:"@koreanglowskin",       emoji:"🔆", tags:["스킨케어","루틴","피부"],          category:"skincare",      duration:"0:57", date:"2024-12-03", trending:true  },
+    { id:11, title:"日本最新防晒霜测评 — SPF50不泛白美白防晒推荐",                           platform:"douyin",   region:"jp", views:"2.1M", likes:"156K", comments:"8.9K",  shares:"52K",  author:"@japan_beauty_lab",     emoji:"☀️", tags:["防晒","美白","护肤"],              category:"lam-trang",     duration:"9:15", date:"2024-11-20", trending:false },
+    { id:12, title:"Serum trị nám tàn nhang hiệu quả — so sánh 8 sản phẩm",            platform:"facebook", region:"vn", views:"0.8M", likes:"61K",  comments:"4.2K",  shares:"16K",  author:"@skincare_review_vn",   emoji:"💧", tags:["trịnám","tànnhang","serum"],     category:"nam-tan-nhang", duration:"15:30",date:"2024-12-07", trending:true  },
+    { id:13, title:"Makeup da đẹp tự nhiên — no filter challenge viral",                platform:"tiktok",   region:"vn", views:"3.7M", likes:"298K", comments:"13.5K", shares:"78K",  author:"@makeup_magic_vn",      emoji:"👁️", tags:["dadep","makeup","nofilter"],      category:"da-dep",        duration:"0:31", date:"2024-12-09", trending:true  },
+    { id:14, title:"Kem dưỡng chống lão hóa tốt nhất 2024 — guide cho người mới",      platform:"facebook", region:"us", views:"7.8M", likes:"456K", comments:"25.7K", shares:"134K", author:"@dermatologytips",      emoji:"🔬", tags:["retinol","chonglaoho","skincare"],category:"chong-lao-hoa", duration:"11:45",date:"2024-11-15", trending:false },
+    { id:15, title:"小红书爆款祛斑精华 — 韩国明星都在用的淡斑秘诀",                           platform:"rednote",  region:"kr", views:"2.2M", likes:"178K", comments:"9.8K",  shares:"56K",  author:"@koreannaturalbeauty",  emoji:"🎋", tags:["祛斑","淡斑","精华"],              category:"kem-nam",       duration:"1:18", date:"2024-12-04", trending:false },
+    { id:16, title:"Skincare tiết kiệm cho học sinh — routine đơn giản hiệu quả",      platform:"tiktok",   region:"vn", views:"1.1M", likes:"89K",  comments:"5.1K",  shares:"21K",  author:"@student_skincare_vn",  emoji:"🎒", tags:["tiếtkiệm","họcsinh","skincare"],  category:"skincare",      duration:"0:48", date:"2024-11-28", trending:false },
+    { id:17, title:"台灣必買抗老精華 — 抗衰老保濕逆齡秘訣",                                 platform:"douyin",   region:"tw", views:"1.5M", likes:"108K", comments:"6.3K",  shares:"38K",  author:"@taiwan_antiage",       emoji:"🛒", tags:["抗老","逆齡","精華"],              category:"chong-lao-hoa", duration:"18:22",date:"2024-11-12", trending:false },
+    { id:18, title:"Xịt khoáng dưỡng ẩm — review 10 loại tốt nhất cho da dầu",        platform:"tiktok",   region:"vn", views:"0.7M", likes:"54K",  comments:"3.1K",  shares:"13K",  author:"@mist_lover_vn",        emoji:"💦", tags:["xịtkhoáng","dưỡngẩm","dadau"],   category:"skincare",      duration:"1:07", date:"2024-12-06", trending:false },
+    { id:19, title:"Serum làm trắng da nhanh nhất — thử nghiệm thực tế 14 ngày",       platform:"tiktok",   region:"th", views:"2.8M", likes:"211K", comments:"10.2K", shares:"58K",  author:"@asianskintips",        emoji:"🌞", tags:["làmtrắng","serum","trắngda"],     category:"serum",         duration:"0:55", date:"2024-12-02", trending:true  },
+    { id:20, title:"Kem nám ban đêm — trị nám chân chì hiệu quả tại nhà",              platform:"tiktok",   region:"vn", views:"4.5M", likes:"335K", comments:"16.8K", shares:"89K",  author:"@acne_fighter_vn",      emoji:"🧴", tags:["kemnam","trịnám","dưỡngda"],     category:"kem-nam",       duration:"0:44", date:"2024-12-11", trending:true  }
   ],
 
   /* --- Trending Data --- */
@@ -256,12 +256,12 @@ const DATA = {
 
   /* --- Team --- */
   team: [
-    { id:1, name:"Nguyễn Thị Hương", role:"Content Lead", emoji:"👩‍💼", skills:["Strategy","Analytics","Copywriting"], email:"huong@lumiaura.com", note:"Phụ trách chiến lược nội dung tổng thể và định hướng brand voice" },
-    { id:2, name:"Trần Minh Khoa", role:"Video Creator", emoji:"🎬", skills:["Filming","Editing","CapCut"], email:"khoa@lumiaura.com", note:"Chuyên quay và edit video TikTok, Reels. Sở trường Before/After" },
-    { id:3, name:"Lê Thu Trang", role:"Social Media Manager", emoji:"📱", skills:["TikTok","Instagram","Scheduling"], email:"trang@lumiaura.com", note:"Quản lý lịch đăng và community management trên các nền tảng" },
-    { id:4, name:"Phạm Quốc Bảo", role:"Research Analyst", emoji:"🔍", skills:["Market Research","Data","Excel"], email:"bao@lumiaura.com", note:"Nghiên cứu thị trường, theo dõi xu hướng và phân tích competitors" },
-    { id:5, name:"Đỗ Lan Anh", role:"KOL Manager", emoji:"🤝", skills:["KOL Relations","Negotiation","Campaign"], email:"lanh@lumiaura.com", note:"Quản lý mối quan hệ và hợp đồng với KOL/KOC trên tất cả nền tảng" },
-    { id:6, name:"Vũ Hoàng Nam", role:"Graphic Designer", emoji:"🎨", skills:["Photoshop","Canva","Branding"], email:"nam@lumiaura.com", note:"Thiết kế creative assets, thumbnail, infographic cho tất cả kênh" }
+    { id:1, name:"Nguyễn Thị Hương", role:"Content Lead", emoji:"👩‍💼", skills:["Strategy","Analytics","Copywriting"], email:"huong@mediaos.com", note:"Phụ trách chiến lược nội dung tổng thể và định hướng brand voice" },
+    { id:2, name:"Trần Minh Khoa", role:"Video Creator", emoji:"🎬", skills:["Filming","Editing","CapCut"], email:"khoa@mediaos.com", note:"Chuyên quay và edit video TikTok, Reels. Sở trường Before/After" },
+    { id:3, name:"Lê Thu Trang", role:"Social Media Manager", emoji:"📱", skills:["TikTok","Instagram","Scheduling"], email:"trang@mediaos.com", note:"Quản lý lịch đăng và community management trên các nền tảng" },
+    { id:4, name:"Phạm Quốc Bảo", role:"Research Analyst", emoji:"🔍", skills:["Market Research","Data","Excel"], email:"bao@mediaos.com", note:"Nghiên cứu thị trường, theo dõi xu hướng và phân tích competitors" },
+    { id:5, name:"Đỗ Lan Anh", role:"KOL Manager", emoji:"🤝", skills:["KOL Relations","Negotiation","Campaign"], email:"lanh@mediaos.com", note:"Quản lý mối quan hệ và hợp đồng với KOL/KOC trên tất cả nền tảng" },
+    { id:6, name:"Vũ Hoàng Nam", role:"Graphic Designer", emoji:"🎨", skills:["Photoshop","Canva","Branding"], email:"nam@mediaos.com", note:"Thiết kế creative assets, thumbnail, infographic cho tất cả kênh" }
   ],
 
   /* --- Guidelines / SOPs --- */
@@ -342,24 +342,22 @@ const DATA = {
   ],
 
   categories: [
-    { id:"all", label:"Tất cả loại" },
-    { id:"skincare", label:"Skincare" },
-    { id:"makeup", label:"Makeup" },
-    { id:"serum", label:"Serum" },
-    { id:"sunscreen", label:"Kem chống nắng" },
-    { id:"moisturizer", label:"Dưỡng ẩm" },
-    { id:"acne", label:"Trị mụn" },
-    { id:"whitening", label:"Làm trắng" },
-    { id:"anti-aging", label:"Chống lão hóa" },
-    { id:"toner", label:"Toner" }
+    { id:"all",           label:"Tất cả loại" },
+    { id:"skincare",      label:"Skincare" },
+    { id:"nam-tan-nhang", label:"Nám tàn nhang" },
+    { id:"serum",         label:"Serum" },
+    { id:"kem-nam",       label:"Kem nám" },
+    { id:"lam-trang",     label:"Làm trắng" },
+    { id:"chong-lao-hoa", label:"Chống lão hóa" },
+    { id:"da-dep",        label:"Da đẹp" }
   ],
 
   platforms: [
-    { id:"all", label:"Tất cả nền tảng" },
-    { id:"tiktok", label:"TikTok" },
-    { id:"youtube", label:"YouTube" },
-    { id:"instagram", label:"Instagram" },
-    { id:"facebook", label:"Facebook" }
+    { id:"all",     label:"Tất cả nền tảng" },
+    { id:"tiktok",  label:"TikTok" },
+    { id:"facebook",label:"Facebook" },
+    { id:"douyin",  label:"Douyin (抖音)" },
+    { id:"rednote", label:"RedNote (小红书)" }
   ],
 
   articleCategories: [
@@ -399,10 +397,12 @@ const DATA = {
   },
 
   platformEmoji: {
-    tiktok: "🎵",
-    youtube: "▶️",
-    instagram: "📸",
+    tiktok:   "🎵",
     facebook: "👤",
-    shopee: "🛒"
+    douyin:   "🎬",
+    rednote:  "📕",
+    shopee:   "🛒",
+    youtube:  "▶️",
+    instagram:"📸"
   }
 };

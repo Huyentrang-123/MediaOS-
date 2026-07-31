@@ -597,6 +597,15 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
 .chip-light:hover { border-color: var(--primary); color: var(--primary); }
 .chip-light.active { background: var(--primary-muted); border-color: var(--primary); color: var(--primary); }
 
+/* Platform chips — black text for readability */
+.chip-platform {
+  color: #111;
+  background: var(--card-bg);
+  border-color: var(--border);
+}
+.chip-platform:hover  { border-color: var(--primary); color: #000; }
+.chip-platform.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
 /* --- Dropdowns row --- */
 .filter-row {
   display: flex;
@@ -721,11 +730,13 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
   text-decoration: none;
 }
 
-.platform-link:hover { opacity: 0.85; transform: translateY(-1px); }
-.platform-link.tiktok { background: linear-gradient(135deg, #010101, #00f2ea, #ff0050); background: #010101; }
-.platform-link.youtube { background: #ff0000; }
-.platform-link.instagram { background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); }
-.platform-link.facebook { background: #1877f2; }
+.platform-link:hover { opacity: 0.9; transform: translateY(-1px); }
+.platform-link.tiktok   { background: #f0f0f0; color: #000; border: 1px solid #ddd; }
+.platform-link.facebook { background: #e7f0fd; color: #000; border: 1px solid #c5d9f7; }
+.platform-link.douyin   { background: #ffe0ea; color: #000; border: 1px solid #ffc0cc; }
+.platform-link.rednote  { background: #ffeaea; color: #000; border: 1px solid #ffc0c0; }
+.platform-link.youtube  { background: #fff0f0; color: #000; border: 1px solid #ffd0d0; }
+.platform-link.instagram{ background: #f5eeff; color: #000; border: 1px solid #e0c8ff; }
 
 /* Saved videos header */
 .section-header {
@@ -796,10 +807,12 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
   color: #fff;
 }
 
-.platform-tiktok { background: #010101; }
-.platform-youtube { background: #ff0000; }
+.platform-tiktok    { background: #010101; }
+.platform-facebook  { background: #1877f2; }
+.platform-douyin    { background: #fe2c55; }
+.platform-rednote   { background: #ff2442; }
+.platform-youtube   { background: #ff0000; }
 .platform-instagram { background: linear-gradient(135deg, #833ab4, #fd1d1d); }
-.platform-facebook { background: #1877f2; }
 
 .video-duration {
   position: absolute;
@@ -825,6 +838,15 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.video-title-link {
+  text-decoration: none;
+  color: inherit;
+}
+.video-title-link:hover {
+  color: var(--primary);
+  text-decoration: underline;
 }
 
 .video-author {

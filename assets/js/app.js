@@ -1,5 +1,5 @@
 /* ============================================================
-   Lumiaura Content Lab — Application Logic
+   MediaOS — Application Logic
    ============================================================ */
 
 'use strict';
@@ -13,6 +13,7 @@ const state = {
     regions: ['global'],
     platform: 'all',
     category: 'all',
+    sortBy: 'relevance',
     tab: 'keyword',
     results: [],
     hasSearched: false
@@ -49,6 +50,25 @@ function genId() {
 function formatDate(d) {
   if (!d) return '';
   return new Date(d).toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+
+function parseMetric(s) {
+  if (!s) return 0;
+  const n = parseFloat(s);
+  if (String(s).includes('M')) return n * 1000000;
+  if (String(s).includes('K')) return n * 1000;
+  return n;
+}
+
+function getVideoUrl(v) {
+  const q = encodeURIComponent(v.tags[0] || 'skincare');
+  const map = {
+    tiktok:   `https://www.tiktok.com/search?q=${q}`,
+    facebook: `https://www.facebook.com/search/videos?q=${q}`,
+    douyin:   `https://www.douyin.com/search/${q}`,
+    rednote:  `https://www.xiaohongshu.com/search_result?keyword=${q}&source=unknown&type=51`
+  };
+  return map[v.platform] || map.tiktok;
 }
 
 /* --- Toast Notifications --- */
@@ -181,63 +201,64 @@ function renderResearchTab(tab) {
 }
 
 function renderKeywordTab(container) {
-  const regions = DATA.regions;
-  const regionChips = regions.map(r => `
+  const regionChips = DATA.regions.map(r => `
     <button class="chip ${state.search.regions.includes(r.id)?'active':''}" data-region="${r.id}">${r.label}</button>
   `).join('');
 
-  const platformOpts = DATA.platforms.map(p =>
-    `<option value="${p.id}" ${state.search.platform===p.id?'selected':''}>${p.label}</option>`
-  ).join('');
+  const platformChips = DATA.platforms.map(p => `
+    <button class="chip chip-platform ${state.search.platform===p.id?'active':''}" data-platform="${p.id}">${p.label}</button>
+  `).join('');
 
   const categoryOpts = DATA.categories.map(c =>
     `<option value="${c.id}" ${state.search.category===c.id?'selected':''}>${c.label}</option>`
   ).join('');
 
-  const quickChips = DATA.quickSearches.map(q => `
-    <button class="chip" data-quick="${encodeURIComponent(JSON.stringify(q))}">${q.label}</button>
+  const sortOptions = [
+    { id:'relevance', label:'⭐ Liên quan' },
+    { id:'trending',  label:'🔥 Xu hướng 10 ngày' },
+    { id:'views',     label:'👁️ Nhiều view nhất' },
+    { id:'comments',  label:'💬 Nhiều comment nhất' }
+  ];
+  const sortChips = sortOptions.map(s => `
+    <button class="chip chip-light ${state.search.sortBy===s.id?'active':''}" data-sort="${s.id}">${s.label}</button>
   `).join('');
 
   container.innerHTML = `
-    <!-- Search Hero -->
     <div class="research-hero">
-      <div class="research-hero-title">🔍 Tìm kiếm toàn cầu</div>
-      <div class="research-hero-sub">AI tìm video viral mỹ phẩm đa quốc gia, đa nền tảng, đa ngôn ngữ</div>
-
-      <div class="region-label">KHU VỰC TÌM KIẾM (CLICK ĐỂ BẬT/TẮT):</div>
-      <div class="chip-group region-chips mb-16" id="regionChips">${regionChips}</div>
+      <div class="research-hero-title">🔍 Tìm kiếm nội dung</div>
+      <div class="research-hero-sub">Tìm video viral mỹ phẩm đa quốc gia, đa nền tảng, đa ngôn ngữ</div>
 
       <div class="search-row">
         <div class="search-box search-box-dark">
           <input id="searchInput" class="search-input" type="text"
-            placeholder="VD: serum viral, before after skincare, 美白精华, 스킨케어 바..."
+            placeholder="VD: serum viral, kem nám, before after skincare, 美白精华..."
             value="${esc(state.search.query)}">
           <button class="search-btn" id="doSearch">🔴 Tìm kiếm</button>
         </div>
       </div>
 
+      <div class="region-label" style="margin-top:14px">KHU VỰC:</div>
+      <div class="chip-group region-chips mb-12" id="regionChips">${regionChips}</div>
+
       <div class="filter-row mb-12">
-        <select class="filter-select" id="platformFilter">${platformOpts}</select>
-        <select class="filter-select" id="categoryFilter">${categoryOpts}</select>
+        <div style="flex:1">
+          <div class="region-label" style="margin-bottom:6px">NỀN TẢNG:</div>
+          <div class="chip-group" id="platformChips">${platformChips}</div>
+        </div>
+        <div style="flex:1">
+          <div class="region-label" style="margin-bottom:6px">LOẠI:</div>
+          <select class="filter-select" id="categoryFilter">${categoryOpts}</select>
+        </div>
       </div>
 
-      <div class="quick-chips">
-        <span class="quick-chip-label">Tìm nhanh:</span>
-        ${quickChips}
-      </div>
-
-      <!-- Platform deep links -->
-      <div id="platformLinks" style="display:none">
-        <div class="region-label" style="margin-top:16px">MỞ TRỰC TIẾP TRÊN NỀN TẢNG:</div>
-        <div class="platform-links" id="platformLinksRow"></div>
-      </div>
+      <div class="region-label" style="margin-bottom:6px">SẮP XẾP THEO:</div>
+      <div class="chip-group mb-4" id="sortChips">${sortChips}</div>
     </div>
 
-    <!-- Results -->
     <div id="searchResults"></div>
   `;
 
-  // Events — region chips
+  // Region chips
   $$('.chip[data-region]').forEach(chip => {
     chip.addEventListener('click', () => {
       const r = chip.dataset.region;
@@ -255,26 +276,33 @@ function renderKeywordTab(container) {
       $$('.chip[data-region]').forEach(c => {
         c.classList.toggle('active', state.search.regions.includes(c.dataset.region));
       });
+      if (state.search.hasSearched) doSearch();
     });
   });
 
-  // Quick search chips
-  $$('.chip[data-quick]').forEach(chip => {
+  // Platform chips
+  $$('.chip[data-platform]').forEach(chip => {
     chip.addEventListener('click', () => {
-      const q = JSON.parse(decodeURIComponent(chip.dataset.quick));
-      state.search.query = q.query;
-      state.search.regions = q.regions;
-      $('#searchInput').value = q.query;
-      $$('.chip[data-region]').forEach(c => {
-        c.classList.toggle('active', q.regions.includes(c.dataset.region));
-      });
-      doSearch();
+      state.search.platform = chip.dataset.platform;
+      $$('.chip[data-platform]').forEach(c => c.classList.toggle('active', c.dataset.platform === state.search.platform));
+      if (state.search.hasSearched) doSearch();
     });
   });
 
-  // Filter change
-  $('#platformFilter').addEventListener('change', e => { state.search.platform = e.target.value; if (state.search.hasSearched) doSearch(); });
-  $('#categoryFilter').addEventListener('change', e => { state.search.category = e.target.value; if (state.search.hasSearched) doSearch(); });
+  // Category filter
+  $('#categoryFilter').addEventListener('change', e => {
+    state.search.category = e.target.value;
+    if (state.search.hasSearched) doSearch();
+  });
+
+  // Sort chips
+  $$('.chip[data-sort]').forEach(chip => {
+    chip.addEventListener('click', () => {
+      state.search.sortBy = chip.dataset.sort;
+      $$('.chip[data-sort]').forEach(c => c.classList.toggle('active', c.dataset.sort === state.search.sortBy));
+      if (state.search.hasSearched) doSearch();
+    });
+  });
 
   // Search
   $('#doSearch').addEventListener('click', doSearch);
@@ -287,7 +315,6 @@ function doSearch() {
   state.search.query = $('#searchInput').value.trim();
   state.search.hasSearched = true;
 
-  // Filter videos
   let results = DATA.videos.filter(v => {
     const regionMatch = state.search.regions.includes('global') || state.search.regions.includes(v.region);
     const platformMatch = state.search.platform === 'all' || v.platform === state.search.platform;
@@ -299,53 +326,65 @@ function doSearch() {
     return regionMatch && platformMatch && categoryMatch && queryMatch;
   });
 
+  // Sort
+  switch (state.search.sortBy) {
+    case 'trending':
+      results = results.filter(v => v.trending);
+      break;
+    case 'views':
+      results.sort((a, b) => parseMetric(b.views) - parseMetric(a.views));
+      break;
+    case 'comments':
+      results.sort((a, b) => parseMetric(b.comments) - parseMetric(a.comments));
+      break;
+  }
+
   state.search.results = results;
   renderSearchResults();
-  showPlatformLinks();
-}
-
-function showPlatformLinks() {
-  const q = encodeURIComponent(state.search.query || 'skincare viral');
-  const links = [
-    { id:'tiktok', label:'🎵 TikTok', url:`https://www.tiktok.com/search?q=${q}`, bg:'tiktok' },
-    { id:'youtube', label:'▶️ YouTube', url:`https://www.youtube.com/results?search_query=${q}`, bg:'youtube' },
-    { id:'instagram', label:'📸 Instagram', url:`https://www.instagram.com/explore/search/keyword/?q=${q}`, bg:'instagram' },
-    { id:'facebook', label:'👤 Facebook', url:`https://www.facebook.com/search/videos?q=${q}`, bg:'facebook' }
-  ];
-
-  const row = $('#platformLinksRow');
-  if (!row) return;
-  row.innerHTML = links.map(l =>
-    `<a class="platform-link ${l.bg}" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`
-  ).join('');
-  $('#platformLinks').style.display = 'block';
 }
 
 function renderSearchResults() {
   const container = $('#searchResults');
   if (!container) return;
   const results = state.search.results;
+  const q = encodeURIComponent(state.search.query || 'skincare');
+  const platformLinks = [
+    { label:'🎵 TikTok',        url:`https://www.tiktok.com/search?q=${q}`,                                                     cls:'tiktok'   },
+    { label:'👤 Facebook',      url:`https://www.facebook.com/search/videos?q=${q}`,                                            cls:'facebook'  },
+    { label:'🎬 Douyin',        url:`https://www.douyin.com/search/${q}`,                                                        cls:'douyin'   },
+    { label:'📕 RedNote',       url:`https://www.xiaohongshu.com/search_result?keyword=${q}&source=unknown&type=51`,             cls:'rednote'  }
+  ];
+
+  const linksHTML = `
+    <div style="margin-top:16px;margin-bottom:4px">
+      <div class="region-label" style="margin-bottom:8px">🔗 XEM THÊM TRỰC TIẾP TRÊN NỀN TẢNG:</div>
+      <div class="platform-links">${platformLinks.map(l =>
+        `<a class="platform-link ${l.cls}" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`
+      ).join('')}</div>
+    </div>`;
 
   if (results.length === 0) {
     container.innerHTML = `
+      ${linksHTML}
       <div class="empty-state">
         <div class="empty-state-icon">🔍</div>
-        <div class="empty-state-title">Không tìm thấy kết quả</div>
-        <div class="empty-state-desc">Thử từ khóa khác, đổi khu vực hoặc dùng tìm kiếm nhanh ở trên</div>
+        <div class="empty-state-title">Không tìm thấy kết quả trong dữ liệu</div>
+        <div class="empty-state-desc">Nhấn vào các nền tảng bên trên để tìm trực tiếp, hoặc thử đổi từ khóa / bộ lọc</div>
       </div>`;
     return;
   }
 
+  const sortLabel = { relevance:'Liên quan', trending:'Xu hướng 10 ngày', views:'Nhiều view', comments:'Nhiều comment' };
   container.innerHTML = `
+    ${linksHTML}
     <div class="section-header" style="margin-top:20px">
       <div class="section-title">📹 Kết quả tìm kiếm <span class="section-count">${results.length}</span></div>
-      <div style="font-size:12px;color:var(--text-muted)">Sắp xếp: nhiều view nhất</div>
+      <div style="font-size:12px;color:var(--text-muted)">Sắp xếp: ${sortLabel[state.search.sortBy]||''}</div>
     </div>
     <div class="grid-auto">
       ${results.map(v => videoCard(v)).join('')}
     </div>`;
 
-  // attach save handlers
   attachVideoHandlers(container);
 }
 
@@ -407,6 +446,8 @@ function videoCard(v, isSaved = false) {
   const savedIds = state.savedVideos.map(x => x.id);
   const alreadySaved = savedIds.includes(v.id);
   const regionInfo = DATA.regions.find(r => r.id === v.region) || { label: v.region };
+  const videoUrl = getVideoUrl(v);
+  const trendBadge = v.trending ? '<span class="badge badge-error" style="font-size:10px;padding:2px 6px">🔥 Trending</span>' : '';
 
   return `
     <div class="video-card" data-id="${v.id}">
@@ -416,8 +457,8 @@ function videoCard(v, isSaved = false) {
         <div class="video-duration">${v.duration}</div>
       </div>
       <div class="video-body">
-        <div class="video-title">${esc(v.title)}</div>
-        <div class="video-author">${esc(v.author)} · ${regionInfo.label}</div>
+        <a class="video-title video-title-link" href="${videoUrl}" target="_blank" rel="noopener" title="Xem trên ${v.platform}">${esc(v.title)}</a>
+        <div class="video-author">${esc(v.author)} · ${regionInfo.label} ${trendBadge}</div>
         <div class="video-stats">
           <span class="video-stat">👁️ ${v.views}</span>
           <span class="video-stat">❤️ ${v.likes}</span>
@@ -429,7 +470,7 @@ function videoCard(v, isSaved = false) {
           <button class="btn btn-sm btn-ghost flex-1 save-btn" data-vid="${v.id}" title="${alreadySaved?'Bỏ lưu':'Lưu video'}">
             ${alreadySaved ? '⭐ Đã lưu' : '☆ Lưu'}
           </button>
-          <button class="btn btn-sm btn-primary view-btn" data-vid="${v.id}">🔍 Xem</button>
+          <a class="btn btn-sm btn-primary" href="${videoUrl}" target="_blank" rel="noopener">🔗 Xem</a>
         </div>
       </div>
     </div>`;
@@ -460,41 +501,6 @@ function attachVideoHandlers(container) {
     });
   });
 
-  $$('.view-btn', container).forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      const id = parseInt(btn.dataset.vid);
-      const v = DATA.videos.find(x => x.id === id) || state.savedVideos.find(x => x.id === id);
-      if (!v) return;
-      openModal(`📹 ${v.title}`, `
-        <div style="text-align:center;margin-bottom:16px">
-          <div style="font-size:72px;margin-bottom:8px">${v.emoji}</div>
-          <div class="badge badge-${v.platform === 'tiktok'?'primary':'info'}" style="margin-bottom:8px">${DATA.platformEmoji[v.platform]} ${v.platform.toUpperCase()}</div>
-        </div>
-        <div style="margin-bottom:12px">
-          <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:4px">${esc(v.title)}</div>
-          <div style="font-size:13px;color:var(--text-secondary)">${esc(v.author)}</div>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;text-align:center">
-          ${[['👁️','Views',v.views],['❤️','Likes',v.likes],['💬','Comments',v.comments],['🔗','Shares',v.shares]].map(([icon,label,val])=>`
-            <div style="background:var(--main-bg);border-radius:8px;padding:12px">
-              <div style="font-size:18px">${icon}</div>
-              <div style="font-size:16px;font-weight:800;color:var(--primary)">${val}</div>
-              <div style="font-size:11px;color:var(--text-muted)">${label}</div>
-            </div>`).join('')}
-        </div>
-        <div style="font-size:12.5px;color:var(--text-secondary);margin-bottom:8px">
-          <strong>Tags:</strong> ${v.tags.map(t=>`<span class="tag">#${t}</span>`).join(' ')}
-        </div>
-        <div style="font-size:12.5px;color:var(--text-secondary)">
-          <strong>Ngày đăng:</strong> ${formatDate(v.date)} · <strong>Thời lượng:</strong> ${v.duration}
-        </div>
-      `, `
-        <button class="btn btn-ghost" onclick="closeModal()">Đóng</button>
-        <button class="btn btn-primary" onclick="window.open('https://www.${v.platform}.com/search?q=${encodeURIComponent(v.tags[0]||'skincare')}','_blank')">🔗 Tìm trên ${v.platform}</button>
-      `);
-    });
-  });
 }
 
 /* ============================================================
@@ -819,7 +825,7 @@ function renderCampaigns() {
 }
 
 function campaignFormHTML(c = {}) {
-  const platOpts = ['tiktok','youtube','instagram','facebook','shopee'].map(p =>
+  const platOpts = ['tiktok','facebook','douyin','rednote','shopee'].map(p =>
     `<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
       <input type="checkbox" name="platform" value="${p}" ${(c.platforms||[]).includes(p)?'checked':''}> ${DATA.platformEmoji[p]||''} ${p}
     </label>`).join('');
@@ -1074,7 +1080,7 @@ function renderTeam() {
     <div class="page-header flex justify-between items-center">
       <div>
         <div class="page-title">👥 Team</div>
-        <div class="page-subtitle">Thành viên team Content Lab — Lumiaura Media</div>
+        <div class="page-subtitle">Thành viên team Content — MediaOS</div>
       </div>
     </div>
 
