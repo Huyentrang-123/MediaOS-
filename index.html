@@ -7,6 +7,8 @@
   <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
   <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.10/babel.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -264,7 +266,7 @@
       align-items: flex-start;
       font-size: 13px;
     }
-    .item-list li::before { content: '·'; color: var(--accent); font-weight: 700; flex-shrink: 0; }
+    .item-list li::before { content: '\00B7'; color: var(--accent); font-weight: 700; flex-shrink: 0; }
 
     .checklist-card { border-left: 3px solid var(--accent); }
     .checklist-card.completed { border-left-color: var(--success); }
@@ -343,6 +345,8 @@
     .empty-icon { font-size: 40px; margin-bottom: 12px; }
     .empty-text { font-size: 14px; }
 
+    .loading-state { text-align: center; padding: 48px 20px; color: var(--text-secondary); font-size: 14px; }
+
     @keyframes spin { to { transform: rotate(360deg); } }
     .spinner {
       width: 14px; height: 14px;
@@ -390,6 +394,20 @@
 </head>
 <body>
 <div id="root"></div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBMnAI31wJgmP_Lh8U9oE0j9qPwA8gDfRw",
+    authDomain: "mediaos-ca8ac.firebaseapp.com",
+    projectId: "mediaos-ca8ac",
+    storageBucket: "mediaos-ca8ac.firebasestorage.app",
+    messagingSenderId: "174719060920",
+    appId: "1:174719060920:web:2f2f08b96434d39efb5d4d"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+
 <script type="text/babel">
 const { useState, useEffect, useRef, useMemo } = React;
 
@@ -419,6 +437,32 @@ function useLocalStorage(key, initial) {
   });
   useEffect(() => { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }, [key, val]);
   return [val, setVal];
+}
+
+function useFirestoreCol(col) {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const unsub = db.collection(col)
+      .orderBy('createdAt', 'desc')
+      .onSnapshot(
+        snap => { setData(snap.docs.map(d => ({ id: d.id, ...d.data() }))); setLoading(false); },
+        err => { console.error('Firestore error:', col, err); setLoading(false); }
+      );
+    return unsub;
+  }, [col]);
+  return [data, loading];
+}
+
+function useEditors() {
+  const [editors, setEditorsState] = useState(EDITORS_DEFAULT);
+  useEffect(() => {
+    const unsub = db.collection('settings').doc('editors').onSnapshot(snap => {
+      if (snap.exists) setEditorsState(snap.data().list || EDITORS_DEFAULT);
+    });
+    return unsub;
+  }, []);
+  return [editors, (list) => db.collection('settings').doc('editors').set({ list })];
 }
 
 /* ── TRANSLATION API ── */
@@ -469,7 +513,7 @@ function SettingsModal({ editors, onSave, onClose }) {
   return (
     <div className="modal-overlay" onClick={e => e.target===e.currentTarget && onClose()}>
       <div className="modal">
-        <div className="modal-title">⚙️ Cài đặt – Tên Editor</div>
+        <div className="modal-title">&#9881;&#65039; Cài đặt – Tên Editor</div>
         <div className="form-grid">
           {names.map((name,i) => (
             <div key={i} className="form-group">
@@ -503,13 +547,13 @@ function ChecklistForm({ editors, onAdd }) {
     if (!editor.trim()) return setErr('Vui lòng chọn editor.');
     if (!list.length) return setErr('Vui lòng nhập ít nhất 1 công việc.');
     setErr('');
-    onAdd({ id:generateId(), date, editor, items:list, notes, completed:false, createdAt:new Date().toISOString() });
+    onAdd({ date, editor, items: list, notes, completed: false, createdAt: new Date().toISOString() });
     setItems(''); setNotes('');
   };
 
   return (
     <div className="card">
-      <div className="card-title" style={{marginBottom:14}}>➕ Thêm Checklist</div>
+      <div className="card-title" style={{marginBottom:14}}>&#10133; Thêm Checklist</div>
       {err && <div className="alert alert-danger">{err}</div>}
       <form onSubmit={submit}>
         <div className="form-grid">
@@ -526,7 +570,7 @@ function ChecklistForm({ editors, onAdd }) {
           <div className="form-group full">
             <label className="form-label">Công việc hôm nay (mỗi dòng 1 việc)</label>
             <textarea className="form-textarea" value={items} onChange={e=>setItems(e.target.value)}
-              placeholder="Viết content video sản phẩm A\nChỉnh sửa video B\nLên kế hoạch C..." style={{minHeight:100}}/>
+              placeholder="Viết content video sản phẩm A\n Chỉnh sửa video B\nLên kế hoạch C..." style={{minHeight:100}}/>
           </div>
           <div className="form-group full">
             <label className="form-label">Ghi chú (tùy chọn)</label>
@@ -535,7 +579,7 @@ function ChecklistForm({ editors, onAdd }) {
           </div>
         </div>
         <div style={{marginTop:14}}>
-          <button className="btn btn-primary" type="submit">💾 Lưu Checklist</button>
+          <button className="btn btn-primary" type="submit">&#128190; Lưu Checklist</button>
         </div>
       </form>
     </div>
@@ -556,20 +600,20 @@ function ChecklistCard({ item, onToggle, onDelete }) {
           <div className="card-meta">{item.items.length} công việc · {formatDT(item.createdAt)}</div>
         </div>
         <div style={{display:'flex',gap:6,flexShrink:0}}>
-          <button className="btn btn-secondary btn-sm" onClick={()=>onToggle(item.id)}>
+          <button className="btn btn-secondary btn-sm" onClick={()=>onToggle(item.id, !item.completed)}>
             {item.completed?'↩ Mở lại':'✅ Xong'}
           </button>
-          <button className="btn btn-danger btn-sm btn-icon" onClick={()=>onDelete(item.id)} title="Xóa">🗑</button>
+          <button className="btn btn-danger btn-sm btn-icon" onClick={()=>onDelete(item.id)} title="Xóa">&#128465;</button>
         </div>
       </div>
       <ul className="item-list">{item.items.map((it,i)=><li key={i}>{it}</li>)}</ul>
-      {item.notes && <div className="notes-box">📝 {item.notes}</div>}
+      {item.notes && <div className="notes-box">&#128221; {item.notes}</div>}
     </div>
   );
 }
 
 function DailyChecklistTab({ editors }) {
-  const [checklists, setChecklists] = useLocalStorage('mediaos_checklists',[]);
+  const [checklists, loading] = useFirestoreCol('checklists');
   const today = getToday();
   const todayCount = checklists.filter(c=>c.date===today).length;
 
@@ -588,10 +632,12 @@ function DailyChecklistTab({ editors }) {
         <StatCard label="Hoàn thành" value={checklists.filter(c=>c.completed).length} color="success"/>
         <StatCard label="Đang làm" value={checklists.filter(c=>!c.completed).length}/>
       </div>
-      <ChecklistForm editors={editors} onAdd={item=>setChecklists(prev=>[item,...prev])}/>
-      {grouped.length===0 ? (
+      <ChecklistForm editors={editors} onAdd={item => db.collection('checklists').add(item)}/>
+      {loading ? (
+        <div className="loading-state">&#9203; Đang tải dữ liệu...</div>
+      ) : grouped.length===0 ? (
         <div className="empty-state">
-          <div className="empty-icon">📋</div>
+          <div className="empty-icon">&#128203;</div>
           <div className="empty-text">Chưa có checklist nào. Thêm checklist đầu tiên!</div>
         </div>
       ) : grouped.map(([date,items])=>(
@@ -599,8 +645,8 @@ function DailyChecklistTab({ editors }) {
           <div className="date-label">{date===today?'📅 Hôm nay – ':''}{formatDate(date)}</div>
           {items.map(item=>(
             <ChecklistCard key={item.id} item={item}
-              onToggle={id=>setChecklists(prev=>prev.map(c=>c.id===id?{...c,completed:!c.completed}:c))}
-              onDelete={id=>{ if(confirm('Xóa checklist này?')) setChecklists(prev=>prev.filter(c=>c.id!==id)); }}
+              onToggle={(id, completed) => db.collection('checklists').doc(id).update({completed})}
+              onDelete={id=>{ if(confirm('Xóa checklist này?')) db.collection('checklists').doc(id).delete(); }}
             />
           ))}
         </div>
@@ -622,7 +668,7 @@ function PasteParser({ onAdd }) {
       const parts = line.split('|').map(s=>s.trim());
       if (parts.length<2||!parts[0]) { skipped++; continue; }
       kocs.push({
-        id:generateId(), name:parts[0]||'', instagram:parts[1]||'', gmail:parts[2]||'', followers:parts[3]||'',
+        name:parts[0]||'', instagram:parts[1]||'', gmail:parts[2]||'', followers:parts[3]||'',
         status:'Chưa phản hồi', price:'', address:'', bankAccount:'', notes:'',
         lastContact:getToday(), createdAt:new Date().toISOString()
       });
@@ -636,7 +682,7 @@ function PasteParser({ onAdd }) {
 
   return (
     <div className="card">
-      <div className="card-title" style={{marginBottom:10}}>📋 Dán dữ liệu KOC</div>
+      <div className="card-title" style={{marginBottom:10}}>&#128203; Dán dữ liệu KOC</div>
       <div style={{fontSize:12,color:'var(--text-secondary)',marginBottom:8}}>
         Định dạng: <code style={{background:'var(--surface-3)',padding:'1px 6px',borderRadius:4}}>Tên | Instagram | Gmail | Followers</code> (mỗi dòng 1 KOC)
       </div>
@@ -644,7 +690,7 @@ function PasteParser({ onAdd }) {
         placeholder="Nguyễn Văn A | @vana | vana@gmail.com | 50k\nNguyễn Văn B | @vanb | vanb@gmail.com | 120k" style={{minHeight:80}}/>
       {msg && <div className="alert alert-success" style={{marginTop:8}}>{msg}</div>}
       <div style={{marginTop:10}}>
-        <button className="btn btn-primary" onClick={parse} disabled={!text.trim()}>➕ Parse &amp; Thêm vào DB</button>
+        <button className="btn btn-primary" onClick={parse} disabled={!text.trim()}>&#10133; Parse &amp; Thêm vào DB</button>
       </div>
     </div>
   );
@@ -684,15 +730,15 @@ function EditableCell({ value, onChange, type='text', options }) {
 }
 
 function KOCDatabaseTab() {
-  const [kocs, setKocs] = useLocalStorage('mediaos_kocs',[]);
+  const [kocs, loading] = useFirestoreCol('kocs');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
   const handleUpdate = (id, changes) =>
-    setKocs(prev=>prev.map(k=>k.id===id?{...k,...changes,lastContact:getToday()}:k));
+    db.collection('kocs').doc(id).update({...changes, lastContact: getToday()});
 
   const handleDelete = (id) => {
-    if(confirm('Xóa KOC này?')) setKocs(prev=>prev.filter(k=>k.id!==id));
+    if(confirm('Xóa KOC này?')) db.collection('kocs').doc(id).delete();
   };
 
   const filtered = useMemo(()=>{
@@ -719,18 +765,20 @@ function KOCDatabaseTab() {
         <StatCard label="Đã book" value={stats.booked} color="warning"/>
         <StatCard label="Completed" value={stats.completed} color="success"/>
       </div>
-      <PasteParser onAdd={newKocs=>setKocs(prev=>[...newKocs,...prev])}/>
+      <PasteParser onAdd={newKocs => newKocs.forEach(k => db.collection('kocs').add(k))}/>
       <div className="toolbar">
-        <input className="form-input toolbar-search" placeholder="🔍 Tìm theo tên, Instagram, Email..."
+        <input className="form-input toolbar-search" placeholder="&#128269; Tìm theo tên, Instagram, Email..."
           value={search} onChange={e=>setSearch(e.target.value)}/>
         <select className="form-select" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)} style={{minWidth:160}}>
           <option value="">Tất cả trạng thái</option>
           {KOC_STATUSES.map(s=><option key={s} value={s}>{s}</option>)}
         </select>
       </div>
-      {filtered.length===0 ? (
+      {loading ? (
+        <div className="loading-state">&#9203; Đang tải dữ liệu...</div>
+      ) : filtered.length===0 ? (
         <div className="empty-state">
-          <div className="empty-icon">👥</div>
+          <div className="empty-icon">&#128101;</div>
           <div className="empty-text">{kocs.length===0?'Chưa có KOC nào. Dán dữ liệu để thêm!':'Không tìm thấy KOC nào phù hợp.'}</div>
         </div>
       ) : (
@@ -757,7 +805,7 @@ function KOCDatabaseTab() {
                     <td style={{minWidth:120}}><EditableCell value={k.bankAccount} onChange={v=>handleUpdate(k.id,{bankAccount:v})}/></td>
                     <td style={{minWidth:120}}><EditableCell value={k.notes} onChange={v=>handleUpdate(k.id,{notes:v})}/></td>
                     <td style={{whiteSpace:'nowrap',fontSize:12,color:'var(--text-secondary)'}}>{k.lastContact||'–'}</td>
-                    <td><button className="btn btn-danger btn-sm btn-icon" onClick={()=>handleDelete(k.id)}>🗑</button></td>
+                    <td><button className="btn btn-danger btn-sm btn-icon" onClick={()=>handleDelete(k.id)}>&#128465;</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -785,7 +833,7 @@ function APISettings({ apiKey, onSave }) {
 
   return (
     <div className="api-settings">
-      <div className="api-settings-title">🔑 Cấu hình Claude API Key</div>
+      <div className="api-settings-title">&#128273; Cấu hình Claude API Key</div>
       <div style={{fontSize:12,color:'var(--warning-text)',marginBottom:10}}>
         Nhập Anthropic API key để sử dụng tính năng dịch thuật. Key được lưu trong browser của bạn, không gửi đi đâu cả.
       </div>
@@ -803,8 +851,8 @@ function APISettings({ apiKey, onSave }) {
 
 function TranslationTab({ mode }) {
   const [apiKey, setApiKey] = useLocalStorage('mediaos_api_key','');
-  const [translations, setTranslations] = useLocalStorage('mediaos_translations',[]);
-  const [templates, setTemplates] = useLocalStorage('mediaos_templates',[]);
+  const [translations, loadingTrans] = useFirestoreCol('translations');
+  const [templates, loadingTpl] = useFirestoreCol('templates');
   const [source, setSource] = useState('');
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
@@ -833,13 +881,13 @@ function TranslationTab({ mode }) {
 
   const saveHistory = () => {
     if (!source||!result) return;
-    setTranslations(prev=>[{id:generateId(),source,result,createdAt:new Date().toISOString()},...prev]);
+    db.collection('translations').add({ source, result, createdAt: new Date().toISOString() });
     setSource(''); setResult('');
   };
 
   const saveTemplate = () => {
     if (!tplName.trim()||!source.trim()) return;
-    setTemplates(prev=>[...prev,{id:generateId(),name:tplName.trim(),content:source}]);
+    db.collection('templates').add({ name: tplName.trim(), content: source, createdAt: new Date().toISOString() });
     setTplName(''); setShowTplSave(false);
   };
 
@@ -859,15 +907,15 @@ function TranslationTab({ mode }) {
       {mode==='direct' && <APISettings apiKey={apiKey} onSave={setApiKey}/>}
 
       <div className="card">
-        <div className="card-title" style={{marginBottom:14}}>🌐 Dịch Đài Loan → Việt Nam</div>
+        <div className="card-title" style={{marginBottom:14}}>&#127760; Dịch Đài Loan → Việt Nam</div>
         <div className="translation-grid">
           <div className="translation-panel">
-            <div className="translation-label">📥 Tiếng Trung (Đài Loan)</div>
+            <div className="translation-label">&#128229; Tiếng Trung (Đài Loan)</div>
             <textarea className="form-textarea translation-area" value={source} onChange={e=>setSource(e.target.value)}
               placeholder="Dán văn bản tiếng Trung vào đây..."/>
           </div>
           <div className="translation-panel">
-            <div className="translation-label">📤 Tiếng Việt</div>
+            <div className="translation-label">&#128228; Tiếng Việt</div>
             <textarea className="form-textarea translation-area" value={result} onChange={e=>setResult(e.target.value)}
               placeholder="Bản dịch sẽ xuất hiện ở đây..." readOnly={loading}/>
           </div>
@@ -878,10 +926,10 @@ function TranslationTab({ mode }) {
             {loading?<><span className="spinner"></span> Đang dịch...</>:'🔄 Dịch'}
           </button>
           <button className="btn btn-secondary" onClick={doCopy} disabled={!result}>
-            {copied?'✅ Đã sao chép!':'📋 Sao chép'}
+            {copied?'✅ Đã sao chép!':'&#128203; Sao chép'}
           </button>
-          <button className="btn btn-secondary" onClick={saveHistory} disabled={!source||!result}>💾 Lưu lịch sử</button>
-          <button className="btn btn-secondary" onClick={()=>setShowTplSave(!showTplSave)} disabled={!source}>📌 Lưu template</button>
+          <button className="btn btn-secondary" onClick={saveHistory} disabled={!source||!result}>&#128190; Lưu lịch sử</button>
+          <button className="btn btn-secondary" onClick={()=>setShowTplSave(!showTplSave)} disabled={!source}>&#128204; Lưu template</button>
         </div>
         {showTplSave && (
           <div style={{display:'flex',gap:8,marginTop:10}}>
@@ -894,42 +942,44 @@ function TranslationTab({ mode }) {
         )}
       </div>
 
-      {templates.length>0 && (
+      {!loadingTpl && templates.length>0 && (
         <div className="card">
-          <div className="card-title" style={{marginBottom:12}}>📌 Templates ({templates.length})</div>
+          <div className="card-title" style={{marginBottom:12}}>&#128204; Templates ({templates.length})</div>
           {templates.map(t=>(
             <div key={t.id} className="template-item">
               <span className="template-name">{t.name}</span>
               <span className="template-preview">{t.content.substring(0,100)}{t.content.length>100?'…':''}</span>
               <button className="btn btn-secondary btn-sm" onClick={()=>setSource(t.content)}>Dùng</button>
-              <button className="btn btn-danger btn-sm btn-icon" onClick={()=>setTemplates(prev=>prev.filter(x=>x.id!==t.id))}>🗑</button>
+              <button className="btn btn-danger btn-sm btn-icon" onClick={()=>db.collection('templates').doc(t.id).delete()}>&#128465;</button>
             </div>
           ))}
         </div>
       )}
 
       <div className="card">
-        <div className="card-title" style={{marginBottom:12}}>📜 Lịch sử dịch ({translations.length})</div>
+        <div className="card-title" style={{marginBottom:12}}>&#128220; Lịch sử dịch ({translations.length})</div>
         {translations.length>0 && (
-          <input className="form-input" placeholder="🔍 Tìm trong lịch sử..." value={histSearch}
+          <input className="form-input" placeholder="&#128269; Tìm trong lịch sử..." value={histSearch}
             onChange={e=>setHistSearch(e.target.value)} style={{marginBottom:12}}/>
         )}
-        {filteredHist.length===0 ? (
+        {loadingTrans ? (
+          <div className="loading-state">&#9203; Đang tải...</div>
+        ) : filteredHist.length===0 ? (
           <div className="empty-state" style={{padding:24}}>
-            <div className="empty-icon">📜</div>
+            <div className="empty-icon">&#128220;</div>
             <div className="empty-text">{translations.length===0?'Chưa có lịch sử dịch.':'Không tìm thấy.'}</div>
           </div>
         ) : filteredHist.map(t=>(
           <div key={t.id} className="history-item">
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:8}}>
               <div style={{flex:1,minWidth:0}}>
-                <div className="history-source">🇹🇼 {t.source.substring(0,120)}{t.source.length>120?'…':''}</div>
-                <div className="history-result">🇻🇳 {t.result.substring(0,120)}{t.result.length>120?'…':''}</div>
+                <div className="history-source">&#127481;&#127484; {t.source.substring(0,120)}{t.source.length>120?'…':''}</div>
+                <div className="history-result">&#127483;&#127475; {t.result.substring(0,120)}{t.result.length>120?'…':''}</div>
                 <div className="history-time">{formatDT(t.createdAt)}</div>
               </div>
               <div style={{display:'flex',gap:4,flexShrink:0}}>
                 <button className="btn btn-secondary btn-sm" onClick={()=>{setSource(t.source);setResult(t.result);}}>Dùng lại</button>
-                <button className="btn btn-danger btn-sm btn-icon" onClick={()=>setTranslations(prev=>prev.filter(x=>x.id!==t.id))}>🗑</button>
+                <button className="btn btn-danger btn-sm btn-icon" onClick={()=>db.collection('translations').doc(t.id).delete()}>&#128465;</button>
               </div>
             </div>
           </div>
@@ -943,7 +993,7 @@ function TranslationTab({ mode }) {
 function App() {
   const [activeTab, setActiveTab] = useState('checklist');
   const [theme, setTheme] = useLocalStorage('mediaos_theme','light');
-  const [editors, setEditors] = useLocalStorage('mediaos_editors', EDITORS_DEFAULT);
+  const [editors, setEditors] = useEditors();
   const [showSettings, setShowSettings] = useState(false);
 
   useEffect(()=>{ document.documentElement.setAttribute('data-theme',theme); },[theme]);
@@ -959,14 +1009,14 @@ function App() {
       {showSettings && <SettingsModal editors={editors} onSave={setEditors} onClose={()=>setShowSettings(false)}/>}
       <header className="app-header">
         <div className="app-logo">
-          <span className="app-logo-icon">🎬</span>
+          <span className="app-logo-icon">&#127916;</span>
           <div>
             <div>MediaOS</div>
             <div className="app-logo-sub">Media Department</div>
           </div>
         </div>
         <div className="header-actions">
-          <button className="btn btn-ghost btn-sm btn-icon" onClick={()=>setShowSettings(true)} title="Cài đặt editor">⚙️</button>
+          <button className="btn btn-ghost btn-sm btn-icon" onClick={()=>setShowSettings(true)} title="Cài đặt editor">&#9881;&#65039;</button>
           <button className="btn btn-ghost btn-sm btn-icon"
             onClick={()=>setTheme(t=>t==='light'?'dark':'light')}
             title={theme==='light'?'Dark mode':'Light mode'}>
