@@ -440,35 +440,61 @@ const StatCard = ({ label, value, color }) => (
   </div>
 );
 
+/* ── TSV PARSER (RFC4180 – handles quoted multi-line cells from Google Sheets) ── */
+function parseTSVRobust(rawText) {
+  const rows = [];
+  let row = [], field = '', inQuotes = false, i = 0;
+  while (i < rawText.length) {
+    const ch = rawText[i];
+    if (inQuotes) {
+      if (ch === '"' && rawText[i + 1] === '"') { field += '"'; i += 2; }
+      else if (ch === '"') { inQuotes = false; i++; }
+      else { field += ch; i++; }
+    } else {
+      if (ch === '"') { inQuotes = true; i++; }
+      else if (ch === '\t') { row.push(field); field = ''; i++; }
+      else if (ch === '\n' || ch === '\r') {
+        if (ch === '\r' && rawText[i + 1] === '\n') i++;
+        row.push(field); field = '';
+        if (row.some(f => f.trim())) rows.push(row);
+        row = []; i++;
+      } else { field += ch; i++; }
+    }
+  }
+  if (field || row.length) { row.push(field); if (row.some(f => f.trim())) rows.push(row); }
+  return rows;
+}
+
 /* ════════════ TAB 1: KOC DATABASE ════════════ */
 function PasteParser({ onAdd }) {
   const [text, setText] = useState('');
   const [msg, setMsg] = useState(null);
 
   const parse = () => {
-    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    const hasTabs = text.includes('\t');
+    const rows = hasTabs
+      ? parseTSVRobust(text)
+      : text.split('\n').map(l => l.trim()).filter(Boolean).map(l => l.split('|').map(s => s.trim()));
+
     let added = 0, skipped = 0;
     const kocs = [];
 
-    for (const line of lines) {
-      /* hỗ trợ cả tab (copy từ Google Sheets) lẫn pipe */
-      const sep = line.includes('\t') ? '\t' : '|';
-      const parts = line.split(sep).map(s => s.trim());
-      if (!parts[0]) { skipped++; continue; }
+    for (const parts of rows) {
+      if (!(parts[0] || '').trim()) { skipped++; continue; }
 
       /* cấu trúc cột trong sheet: Tên | Link IG | Gmail | Follow IG | Trạng thái | Báo giá | Note | Địa chỉ */
-      const rawStatus = parts[4] || '';
+      const rawStatus = (parts[4] || '').trim();
       const status = KOC_STATUSES.includes(rawStatus) ? rawStatus : 'Gửi mail';
 
       kocs.push({
-        name:        parts[0] || '',
-        instagram:   parts[1] || '',
-        gmail:       parts[2] || '',
-        followers:   parts[3] || '',
+        name:        (parts[0] || '').trim(),
+        instagram:   (parts[1] || '').trim(),
+        gmail:       (parts[2] || '').trim(),
+        followers:   (parts[3] || '').trim(),
         status,
-        price:       parts[5] || '',
-        notes:       parts[6] || '',
-        address:     parts[7] || '',
+        price:       (parts[5] || '').trim(),
+        notes:       (parts[6] || '').trim(),
+        address:     (parts[7] || '').trim(),
         bankAccount: '',
         lastContact: getToday(),
         createdAt:   new Date().toISOString()
@@ -530,7 +556,7 @@ function EditableCell({ value, onChange, type = 'text', options }) {
   return (
     <span onClick={() => setEditing(true)} title="Click để chỉnh sửa"
       style={{cursor:'pointer',minWidth:50,display:'inline-block',borderBottom:'1px dashed var(--border)'}}>
-      {val || <span style={{color:'var(--text-muted)'}}>–</span>}
+      {val || <span style={{color:'var(--text-muted)'}}>&#8211;</span>}
     </span>
   );
 }
@@ -549,7 +575,7 @@ function KOCStatusCell({ value, onChange }) {
   return (
     <div ref={ref} style={{position:'relative'}}>
       <span className={kocBadgeClass(value)} onClick={() => setOpen(o => !o)}
-        style={{cursor:'pointer'}}>{value || '–'}</span>
+        style={{cursor:'pointer'}}>{value || '&#8211;'}</span>
       {open && (
         <div style={{
           position:'absolute', top:'100%', left:0, zIndex:50,
@@ -696,7 +722,7 @@ function KOCDatabaseTab() {
                       <EditableCell value={k.bankAccount} onChange={v => handleUpdate(k.id, {bankAccount: v})}/>
                     </td>
                     <td style={{whiteSpace:'nowrap', fontSize:12, color:'var(--text-secondary)'}}>
-                      {k.lastContact || '–'}
+                      {k.lastContact || '&#8211;'}
                     </td>
                     <td>
                       <button className="btn btn-danger btn-sm btn-icon"
