@@ -32,6 +32,9 @@
       --danger: #dc2626;
       --danger-light: #fef2f2;
       --danger-text: #991b1b;
+      --pink: #db2777;
+      --pink-light: #fdf2f8;
+      --pink-text: #9d174d;
       --radius: 8px;
       --radius-sm: 5px;
       --radius-lg: 12px;
@@ -52,6 +55,8 @@
       --warning-text: #fbbf24;
       --danger-light: #1f0000;
       --danger-text: #f87171;
+      --pink-light: #2d0a1e;
+      --pink-text: #f472b6;
     }
 
     body {
@@ -142,13 +147,6 @@
     }
     .card-title { font-size: 15px; font-weight: 600; }
     .card-meta { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
-    .card-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
 
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
@@ -206,18 +204,6 @@
     .btn-lg { padding: 10px 18px; font-size: 14px; }
     .btn-icon { padding: 7px; }
 
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 2px 8px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 600;
-    }
-    .badge-success { background: var(--success-light); color: var(--success-text); }
-    .badge-accent { background: var(--accent-light); color: var(--accent); }
-    .badge-default { background: var(--surface-3); color: var(--text-secondary); }
-
     .alert {
       padding: 10px 14px;
       border-radius: var(--radius);
@@ -230,7 +216,7 @@
     .alert-danger { background: var(--danger-light); color: var(--danger-text); border-color: var(--danger); }
 
     .table-wrapper { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1000px; }
     th {
       background: var(--surface-2);
       border: 1px solid var(--border);
@@ -260,6 +246,21 @@
 
     .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
     .toolbar-search { flex: 1; min-width: 200px; }
+
+    /* Status badges */
+    .koc-badge {
+      display: inline-flex;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .koc-badge-guimail    { background: var(--warning-light); color: var(--warning-text); }
+    .koc-badge-nhanting   { background: var(--pink-light);    color: var(--pink-text); }
+    .koc-badge-dangtrao   { background: var(--accent-light);  color: var(--accent); }
+    .koc-badge-daxong     { background: var(--success-light); color: var(--success-text); }
+    .koc-badge-khonghop   { background: var(--surface-3);     color: var(--text-secondary); }
 
     .translation-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
     @media (max-width: 768px) { .translation-grid { grid-template-columns: 1fr; } }
@@ -308,18 +309,9 @@
     .api-settings-title { font-weight: 700; color: var(--warning-text); margin-bottom: 8px; font-size: 14px; }
     .api-settings-row { display: flex; gap: 8px; align-items: center; }
 
-    .status-badge { display: inline-flex; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
-    .status-0 { background: var(--surface-3); color: var(--text-secondary); }
-    .status-1 { background: var(--accent-light); color: var(--accent); }
-    .status-2 { background: var(--warning-light); color: var(--warning-text); }
-    .status-3 { background: var(--success-light); color: var(--success-text); }
-    .status-4 { background: var(--danger-light); color: var(--danger-text); }
-    .status-5 { background: #f3e8ff; color: #7c3aed; }
-
     .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
     .empty-icon { font-size: 40px; margin-bottom: 12px; }
     .empty-text { font-size: 14px; }
-
     .loading-state { text-align: center; padding: 48px 20px; color: var(--text-secondary); font-size: 14px; }
 
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -362,7 +354,6 @@
 const { useState, useEffect, useRef, useMemo } = React;
 
 /* ── UTILS ── */
-const generateId = () => Math.random().toString(36).substr(2,9) + Date.now().toString(36).substr(-4);
 const getToday = () => new Date().toISOString().split('T')[0];
 const formatDT = (iso) => {
   if (!iso) return '';
@@ -370,7 +361,17 @@ const formatDT = (iso) => {
 };
 
 /* ── CONSTANTS ── */
-const KOC_STATUSES = ['Chưa phản hồi','Đang trao đổi','Đã book','Completed','Không hợp tác','Book tiếp video khác'];
+const KOC_STATUSES = ['Gửi mail', 'Nhắn tin IG', 'Đang trao đổi', 'Đã xong', 'Không hợp tác'];
+
+function kocBadgeClass(status) {
+  if (status === 'Gửi mail')       return 'koc-badge koc-badge-guimail';
+  if (status === 'Nhắn tin IG')    return 'koc-badge koc-badge-nhanting';
+  if (status === 'Đang trao đổi')  return 'koc-badge koc-badge-dangtrao';
+  if (status === 'Đã xong')        return 'koc-badge koc-badge-daxong';
+  if (status === 'Không hợp tác') return 'koc-badge koc-badge-khonghop';
+  return 'koc-badge koc-badge-khonghop';
+}
+
 const TRANSLATION_MODE = 'direct';
 
 /* ── HOOKS ── */
@@ -442,74 +443,134 @@ const StatCard = ({ label, value, color }) => (
 /* ════════════ TAB 1: KOC DATABASE ════════════ */
 function PasteParser({ onAdd }) {
   const [text, setText] = useState('');
-  const [msg, setMsg] = useState('');
+  const [msg, setMsg] = useState(null);
 
   const parse = () => {
-    const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
-    let added=0, skipped=0;
-    const kocs=[];
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    let added = 0, skipped = 0;
+    const kocs = [];
+
     for (const line of lines) {
-      const parts = line.split('|').map(s=>s.trim());
-      if (parts.length<2||!parts[0]) { skipped++; continue; }
+      /* hỗ trợ cả tab (copy từ Google Sheets) lẫn pipe */
+      const sep = line.includes('\t') ? '\t' : '|';
+      const parts = line.split(sep).map(s => s.trim());
+      if (!parts[0]) { skipped++; continue; }
+
+      /* cấu trúc cột trong sheet: Tên | Link IG | Gmail | Follow IG | Trạng thái | Báo giá | Note | Địa chỉ */
+      const rawStatus = parts[4] || '';
+      const status = KOC_STATUSES.includes(rawStatus) ? rawStatus : 'Gửi mail';
+
       kocs.push({
-        name:parts[0]||'', instagram:parts[1]||'', gmail:parts[2]||'', followers:parts[3]||'',
-        status:'Chưa phản hồi', price:'', address:'', bankAccount:'', notes:'',
-        lastContact:getToday(), createdAt:new Date().toISOString()
+        name:        parts[0] || '',
+        instagram:   parts[1] || '',
+        gmail:       parts[2] || '',
+        followers:   parts[3] || '',
+        status,
+        price:       parts[5] || '',
+        notes:       parts[6] || '',
+        address:     parts[7] || '',
+        bankAccount: '',
+        lastContact: getToday(),
+        createdAt:   new Date().toISOString()
       });
       added++;
     }
+
     if (kocs.length) onAdd(kocs);
-    setMsg(`✅ Đã thêm ${added} KOC${skipped?` · Bỏ qua ${skipped} dòng không hợp lệ`:''}`);
+    setMsg({ type: added ? 'success' : 'danger',
+             text: added
+               ? `✅ Đã thêm ${added} KOC${skipped ? ` · Bỏ qua ${skipped} dòng trống` : ''}`
+               : '⚠️ Không có dữ liệu hợp lệ để thêm' });
     setText('');
-    setTimeout(()=>setMsg(''),4000);
+    setTimeout(() => setMsg(null), 4000);
   };
 
   return (
     <div className="card">
-      <div className="card-title" style={{marginBottom:10}}>&#128203; Dán dữ liệu KOC</div>
-      <div style={{fontSize:12,color:'var(--text-secondary)',marginBottom:8}}>
-        Định dạng: <code style={{background:'var(--surface-3)',padding:'1px 6px',borderRadius:4}}>Tên | Instagram | Gmail | Followers</code> (mỗi dòng 1 KOC)
+      <div className="card-title" style={{marginBottom:6}}>&#128203; Nhập dữ liệu KOC</div>
+      <div style={{fontSize:12,color:'var(--text-secondary)',marginBottom:10,lineHeight:1.6}}>
+        Có thể <strong>copy thẳng từ Google Sheets</strong> rồi dán vào đây.<br/>
+        Hoặc nhập thủ công: <code style={{background:'var(--surface-3)',padding:'1px 6px',borderRadius:4}}>Tên | Link IG | Gmail | Follow IG | Trạng thái | Báo giá | Note | Địa chỉ</code>
       </div>
-      <textarea className="form-textarea" value={text} onChange={e=>setText(e.target.value)}
-        placeholder="Nguyễn Văn A | @vana | vana@gmail.com | 50k\nNguyễn Văn B | @vanb | vanb@gmail.com | 120k" style={{minHeight:80}}/>
-      {msg && <div className="alert alert-success" style={{marginTop:8}}>{msg}</div>}
+      <textarea className="form-textarea" value={text} onChange={e => setText(e.target.value)}
+        placeholder="Dán dữ liệu từ Google Sheets vào đây..." style={{minHeight:100}}/>
+      {msg && <div className={`alert alert-${msg.type}`} style={{marginTop:8}}>{msg.text}</div>}
       <div style={{marginTop:10}}>
-        <button className="btn btn-primary" onClick={parse} disabled={!text.trim()}>&#10133; Parse &amp; Thêm vào DB</button>
+        <button className="btn btn-primary" onClick={parse} disabled={!text.trim()}>&#10133; Thêm vào Database</button>
       </div>
     </div>
   );
 }
 
-function EditableCell({ value, onChange, type='text', options }) {
+function EditableCell({ value, onChange, type = 'text', options }) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(value);
   const ref = useRef(null);
 
-  useEffect(()=>{ setVal(value); },[value]);
-  useEffect(()=>{ if(editing&&ref.current) ref.current.focus(); },[editing]);
+  useEffect(() => { setVal(value); }, [value]);
+  useEffect(() => { if (editing && ref.current) ref.current.focus(); }, [editing]);
 
-  const save = () => { setEditing(false); if(val!==value) onChange(val); };
+  const save = () => { setEditing(false); if (val !== value) onChange(val); };
 
-  if (type==='select') return (
+  if (type === 'select') return (
     <select ref={ref} value={val}
-      onChange={e=>{ setVal(e.target.value); onChange(e.target.value); }}
-      style={{minWidth:130}}>
-      {options.map(o=><option key={o} value={o}>{o}</option>)}
+      onChange={e => { setVal(e.target.value); onChange(e.target.value); }}
+      style={{minWidth: 130}}>
+      {options.map(o => <option key={o} value={o}>{o}</option>)}
     </select>
   );
 
   if (editing) return (
-    <input ref={ref} value={val} onChange={e=>setVal(e.target.value)}
+    <input ref={ref} value={val} onChange={e => setVal(e.target.value)}
       onBlur={save}
-      onKeyDown={e=>{ if(e.key==='Enter') save(); if(e.key==='Escape'){setEditing(false);setVal(value);} }}
-      style={{minWidth:80}}/>
+      onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') { setEditing(false); setVal(value); } }}
+      style={{minWidth: 80}}/>
   );
 
   return (
-    <span onClick={()=>setEditing(true)} title="Click để chỉnh sửa"
-      style={{cursor:'pointer',minWidth:60,display:'inline-block',borderBottom:'1px dashed var(--border)'}}>
-      {val||<span style={{color:'var(--text-muted)'}}>–</span>}
+    <span onClick={() => setEditing(true)} title="Click để chỉnh sửa"
+      style={{cursor:'pointer',minWidth:50,display:'inline-block',borderBottom:'1px dashed var(--border)'}}>
+      {val || <span style={{color:'var(--text-muted)'}}>–</span>}
     </span>
+  );
+}
+
+function KOCStatusCell({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} style={{position:'relative'}}>
+      <span className={kocBadgeClass(value)} onClick={() => setOpen(o => !o)}
+        style={{cursor:'pointer'}}>{value || '–'}</span>
+      {open && (
+        <div style={{
+          position:'absolute', top:'100%', left:0, zIndex:50,
+          background:'var(--surface-1)', border:'1px solid var(--border)',
+          borderRadius:'var(--radius)', boxShadow:'0 4px 12px rgba(0,0,0,0.12)',
+          minWidth:160, marginTop:2
+        }}>
+          {KOC_STATUSES.map(s => (
+            <div key={s} onClick={() => { onChange(s); setOpen(false); }}
+              style={{
+                padding:'8px 12px', cursor:'pointer', fontSize:13,
+                background: s === value ? 'var(--surface-2)' : 'transparent'
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
+              onMouseLeave={e => e.currentTarget.style.background = s === value ? 'var(--surface-2)' : 'transparent'}>
+              <span className={kocBadgeClass(s)}>{s}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -519,77 +580,128 @@ function KOCDatabaseTab() {
   const [statusFilter, setStatusFilter] = useState('');
 
   const handleUpdate = (id, changes) =>
-    db.collection('kocs').doc(id).update({...changes, lastContact: getToday()});
+    db.collection('kocs').doc(id).update({ ...changes, lastContact: getToday() });
 
   const handleDelete = (id) => {
-    if(confirm('Xóa KOC này?')) db.collection('kocs').doc(id).delete();
+    if (confirm('Xóa KOC này?')) db.collection('kocs').doc(id).delete();
   };
 
-  const filtered = useMemo(()=>{
-    return kocs.filter(k=>{
-      const q=search.toLowerCase();
-      const ms=!q||k.name.toLowerCase().includes(q)||k.instagram.toLowerCase().includes(q)||k.gmail.toLowerCase().includes(q);
-      const mf=!statusFilter||k.status===statusFilter;
-      return ms&&mf;
+  const filtered = useMemo(() => {
+    return kocs.filter(k => {
+      const q = search.toLowerCase();
+      const ms = !q || k.name.toLowerCase().includes(q) || (k.instagram||'').toLowerCase().includes(q) || (k.gmail||'').toLowerCase().includes(q);
+      const mf = !statusFilter || k.status === statusFilter;
+      return ms && mf;
     });
-  },[kocs,search,statusFilter]);
+  }, [kocs, search, statusFilter]);
 
-  const stats = useMemo(()=>({
-    total:kocs.length,
-    negotiating:kocs.filter(k=>k.status==='Đang trao đổi').length,
-    booked:kocs.filter(k=>k.status==='Đã book').length,
-    completed:kocs.filter(k=>k.status==='Completed').length,
-  }),[kocs]);
+  const stats = useMemo(() => ({
+    total:       kocs.length,
+    negotiating: kocs.filter(k => k.status === 'Đang trao đổi').length,
+    booked:      kocs.filter(k => k.status === 'Đã xong').length,
+    completed:   kocs.filter(k => k.status === 'Không hợp tác').length,
+  }), [kocs]);
 
   return (
     <div>
       <div className="stats-bar">
-        <StatCard label="Tổng KOC" value={stats.total}/>
-        <StatCard label="Đang trao đổi" value={stats.negotiating} color="accent"/>
-        <StatCard label="Đã book" value={stats.booked} color="warning"/>
-        <StatCard label="Completed" value={stats.completed} color="success"/>
+        <StatCard label="Tổng KOC"       value={stats.total}/>
+        <StatCard label="Đang trao đổi"  value={stats.negotiating} color="accent"/>
+        <StatCard label="Đã xong"         value={stats.booked}      color="success"/>
+        <StatCard label="Không hợp tác"  value={stats.completed}   color="danger"/>
       </div>
+
       <PasteParser onAdd={newKocs => newKocs.forEach(k => db.collection('kocs').add(k))}/>
+
       <div className="toolbar">
-        <input className="form-input toolbar-search" placeholder="&#128269; Tìm theo tên, Instagram, Email..."
-          value={search} onChange={e=>setSearch(e.target.value)}/>
-        <select className="form-select" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)} style={{minWidth:160}}>
+        <input className="form-input toolbar-search"
+          placeholder="&#128269; Tìm theo tên, Link IG, Gmail..."
+          value={search} onChange={e => setSearch(e.target.value)}/>
+        <select className="form-select" value={statusFilter}
+          onChange={e => setStatusFilter(e.target.value)} style={{minWidth:170}}>
           <option value="">Tất cả trạng thái</option>
-          {KOC_STATUSES.map(s=><option key={s} value={s}>{s}</option>)}
+          {KOC_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
+
       {loading ? (
         <div className="loading-state">&#9203; Đang tải dữ liệu...</div>
-      ) : filtered.length===0 ? (
+      ) : filtered.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">&#128101;</div>
-          <div className="empty-text">{kocs.length===0?'Chưa có KOC nào. Dán dữ liệu để thêm!':'Không tìm thấy KOC nào phù hợp.'}</div>
+          <div className="empty-text">
+            {kocs.length === 0 ? 'Chưa có KOC nào. Dán dữ liệu từ Google Sheets để thêm!' : 'Không tìm thấy KOC nào phù hợp.'}
+          </div>
         </div>
       ) : (
-        <div className="card" style={{padding:0,overflow:'hidden'}}>
+        <div className="card" style={{padding:0, overflow:'hidden'}}>
+          <div style={{padding:'10px 16px', background:'var(--surface-2)', borderBottom:'1px solid var(--border)', fontSize:12, color:'var(--text-secondary)'}}>
+            Hiển thị {filtered.length} / {kocs.length} KOC
+          </div>
           <div className="table-wrapper">
             <table>
-              <thead><tr>
-                <th style={{width:36}}>#</th>
-                <th>Tên</th><th>Instagram</th><th>Gmail</th><th>Followers</th>
-                <th>Trạng thái</th><th>Giá</th><th>Địa chỉ</th><th>Số TK</th><th>Ghi chú</th>
-                <th>Liên hệ cuối</th><th></th>
-              </tr></thead>
+              <thead>
+                <tr>
+                  <th style={{width:36}}>#</th>
+                  <th>Tên</th>
+                  <th>Link IG</th>
+                  <th>Gmail</th>
+                  <th>Follow IG</th>
+                  <th>Trạng thái</th>
+                  <th>Báo giá (TWD)</th>
+                  <th>Ghi chú</th>
+                  <th>Địa chỉ</th>
+                  <th>Số TK</th>
+                  <th>Liên hệ cuối</th>
+                  <th></th>
+                </tr>
+              </thead>
               <tbody>
-                {filtered.map((k,i)=>(
+                {filtered.map((k, i) => (
                   <tr key={k.id}>
-                    <td style={{color:'var(--text-muted)'}}>{i+1}</td>
-                    <td style={{minWidth:120}}><EditableCell value={k.name} onChange={v=>handleUpdate(k.id,{name:v})}/></td>
-                    <td style={{minWidth:120}}><EditableCell value={k.instagram} onChange={v=>handleUpdate(k.id,{instagram:v})}/></td>
-                    <td style={{minWidth:160}}><EditableCell value={k.gmail} onChange={v=>handleUpdate(k.id,{gmail:v})}/></td>
-                    <td style={{minWidth:70}}><EditableCell value={k.followers} onChange={v=>handleUpdate(k.id,{followers:v})}/></td>
-                    <td><EditableCell value={k.status} onChange={v=>handleUpdate(k.id,{status:v})} type="select" options={KOC_STATUSES}/></td>
-                    <td style={{minWidth:80}}><EditableCell value={k.price} onChange={v=>handleUpdate(k.id,{price:v})}/></td>
-                    <td style={{minWidth:120}}><EditableCell value={k.address} onChange={v=>handleUpdate(k.id,{address:v})}/></td>
-                    <td style={{minWidth:120}}><EditableCell value={k.bankAccount} onChange={v=>handleUpdate(k.id,{bankAccount:v})}/></td>
-                    <td style={{minWidth:120}}><EditableCell value={k.notes} onChange={v=>handleUpdate(k.id,{notes:v})}/></td>
-                    <td style={{whiteSpace:'nowrap',fontSize:12,color:'var(--text-secondary)'}}>{k.lastContact||'–'}</td>
-                    <td><button className="btn btn-danger btn-sm btn-icon" onClick={()=>handleDelete(k.id)}>&#128465;</button></td>
+                    <td style={{color:'var(--text-muted)',textAlign:'center'}}>{i + 1}</td>
+                    <td style={{minWidth:120, fontWeight:500}}>
+                      <EditableCell value={k.name} onChange={v => handleUpdate(k.id, {name: v})}/>
+                    </td>
+                    <td style={{minWidth:140}}>
+                      {k.instagram && k.instagram.startsWith('http') ? (
+                        <a href={k.instagram} target="_blank" rel="noopener"
+                          style={{color:'var(--accent)',fontSize:12,whiteSpace:'nowrap'}}>
+                          {k.instagram.replace('https://www.instagram.com/','@').replace(/\/$/,'')}
+                        </a>
+                      ) : (
+                        <EditableCell value={k.instagram} onChange={v => handleUpdate(k.id, {instagram: v})}/>
+                      )}
+                    </td>
+                    <td style={{minWidth:160}}>
+                      <EditableCell value={k.gmail} onChange={v => handleUpdate(k.id, {gmail: v})}/>
+                    </td>
+                    <td style={{minWidth:70}}>
+                      <EditableCell value={k.followers} onChange={v => handleUpdate(k.id, {followers: v})}/>
+                    </td>
+                    <td style={{minWidth:150}}>
+                      <KOCStatusCell value={k.status}
+                        onChange={v => handleUpdate(k.id, {status: v})}/>
+                    </td>
+                    <td style={{minWidth:90}}>
+                      <EditableCell value={k.price} onChange={v => handleUpdate(k.id, {price: v})}/>
+                    </td>
+                    <td style={{minWidth:180}}>
+                      <EditableCell value={k.notes} onChange={v => handleUpdate(k.id, {notes: v})}/>
+                    </td>
+                    <td style={{minWidth:160}}>
+                      <EditableCell value={k.address} onChange={v => handleUpdate(k.id, {address: v})}/>
+                    </td>
+                    <td style={{minWidth:130}}>
+                      <EditableCell value={k.bankAccount} onChange={v => handleUpdate(k.id, {bankAccount: v})}/>
+                    </td>
+                    <td style={{whiteSpace:'nowrap', fontSize:12, color:'var(--text-secondary)'}}>
+                      {k.lastContact || '–'}
+                    </td>
+                    <td>
+                      <button className="btn btn-danger btn-sm btn-icon"
+                        onClick={() => handleDelete(k.id)}>&#128465;</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -603,30 +715,27 @@ function KOCDatabaseTab() {
 
 /* ════════════ TAB 2: TRANSLATION ════════════ */
 function APISettings({ apiKey, onSave }) {
-  const [key, setKey] = useState(apiKey||'');
+  const [key, setKey] = useState(apiKey || '');
   const [saved, setSaved] = useState(false);
-
-  const handleSave = () => { onSave(key.trim()); setSaved(true); setTimeout(()=>setSaved(false),2000); };
-
+  const handleSave = () => { onSave(key.trim()); setSaved(true); setTimeout(() => setSaved(false), 2000); };
   if (apiKey) return (
     <div className="alert alert-success" style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
       <span>✅ Claude API key đã được cấu hình</span>
-      <button className="btn btn-secondary btn-sm" onClick={()=>onSave('')}>Xóa key</button>
+      <button className="btn btn-secondary btn-sm" onClick={() => onSave('')}>Xóa key</button>
     </div>
   );
-
   return (
     <div className="api-settings">
       <div className="api-settings-title">&#128273; Cấu hình Claude API Key</div>
       <div style={{fontSize:12,color:'var(--warning-text)',marginBottom:10}}>
-        Nhập Anthropic API key để sử dụng tính năng dịch thuật. Key được lưu trong browser của bạn, không gửi đi đâu cả.
+        Nhập Anthropic API key để sử dụng tính năng dịch thuật. Key được lưu trong browser của bạn.
       </div>
       <div className="api-settings-row">
         <input className="form-input" type="password" placeholder="sk-ant-..." value={key}
-          onChange={e=>setKey(e.target.value)} onKeyDown={e=>e.key==='Enter'&&handleSave()}
+          onChange={e => setKey(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSave()}
           style={{flex:1}}/>
         <button className="btn btn-primary" onClick={handleSave} disabled={!key.trim()}>
-          {saved?'✅ Đã lưu':'Lưu key'}
+          {saved ? '✅ Đã lưu' : 'Lưu key'}
         </button>
       </div>
     </div>
@@ -634,7 +743,7 @@ function APISettings({ apiKey, onSave }) {
 }
 
 function TranslationTab({ mode }) {
-  const [apiKey, setApiKey] = useLocalStorage('mediaos_api_key','');
+  const [apiKey, setApiKey] = useLocalStorage('mediaos_api_key', '');
   const [translations, loadingTrans] = useFirestoreCol('translations');
   const [templates, loadingTpl] = useFirestoreCol('templates');
   const [source, setSource] = useState('');
@@ -646,40 +755,40 @@ function TranslationTab({ mode }) {
   const [tplName, setTplName] = useState('');
   const [showTplSave, setShowTplSave] = useState(false);
 
-  const canTranslate = source.trim() && (mode==='proxy' || apiKey);
+  const canTranslate = source.trim() && (mode === 'proxy' || apiKey);
 
   const doTranslate = async () => {
     if (!canTranslate) return;
     setLoading(true); setError(''); setResult('');
     try {
-      const text = mode==='proxy' ? await translateProxy(source) : await translateDirect(source, apiKey);
+      const text = mode === 'proxy' ? await translateProxy(source) : await translateDirect(source, apiKey);
       setResult(text);
-    } catch(e) { setError(e.message||'Dịch thất bại. Vui lòng thử lại.'); }
+    } catch (e) { setError(e.message || 'Dịch thất bại. Vui lòng thử lại.'); }
     finally { setLoading(false); }
   };
 
   const doCopy = () => {
     if (!result) return;
-    navigator.clipboard.writeText(result).then(()=>{ setCopied(true); setTimeout(()=>setCopied(false),2000); });
+    navigator.clipboard.writeText(result).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
   };
 
   const saveHistory = () => {
-    if (!source||!result) return;
+    if (!source || !result) return;
     db.collection('translations').add({ source, result, createdAt: new Date().toISOString() });
     setSource(''); setResult('');
   };
 
   const saveTemplate = () => {
-    if (!tplName.trim()||!source.trim()) return;
+    if (!tplName.trim() || !source.trim()) return;
     db.collection('templates').add({ name: tplName.trim(), content: source, createdAt: new Date().toISOString() });
     setTplName(''); setShowTplSave(false);
   };
 
-  const filteredHist = useMemo(()=>{
+  const filteredHist = useMemo(() => {
     if (!histSearch) return translations;
-    const q=histSearch.toLowerCase();
-    return translations.filter(t=>t.source.toLowerCase().includes(q)||t.result.toLowerCase().includes(q));
-  },[translations,histSearch]);
+    const q = histSearch.toLowerCase();
+    return translations.filter(t => t.source.toLowerCase().includes(q) || t.result.toLowerCase().includes(q));
+  }, [translations, histSearch]);
 
   return (
     <div>
@@ -687,83 +796,79 @@ function TranslationTab({ mode }) {
         <StatCard label="Đã dịch" value={translations.length} color="accent"/>
         <StatCard label="Templates" value={templates.length}/>
       </div>
-
-      {mode==='direct' && <APISettings apiKey={apiKey} onSave={setApiKey}/>}
-
+      {mode === 'direct' && <APISettings apiKey={apiKey} onSave={setApiKey}/>}
       <div className="card">
         <div className="card-title" style={{marginBottom:14}}>&#127760; Dịch Đài Loan → Việt Nam</div>
         <div className="translation-grid">
           <div className="translation-panel">
             <div className="translation-label">&#128229; Tiếng Trung (Đài Loan)</div>
-            <textarea className="form-textarea translation-area" value={source} onChange={e=>setSource(e.target.value)}
+            <textarea className="form-textarea translation-area" value={source} onChange={e => setSource(e.target.value)}
               placeholder="Dán văn bản tiếng Trung vào đây..."/>
           </div>
           <div className="translation-panel">
             <div className="translation-label">&#128228; Tiếng Việt</div>
-            <textarea className="form-textarea translation-area" value={result} onChange={e=>setResult(e.target.value)}
+            <textarea className="form-textarea translation-area" value={result} onChange={e => setResult(e.target.value)}
               placeholder="Bản dịch sẽ xuất hiện ở đây..." readOnly={loading}/>
           </div>
         </div>
         {error && <div className="alert alert-danger">{error}</div>}
         <div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:4}}>
-          <button className="btn btn-primary btn-lg" onClick={doTranslate} disabled={!canTranslate||loading}>
-            {loading?<><span className="spinner"></span> Đang dịch...</>:'🔄 Dịch'}
+          <button className="btn btn-primary btn-lg" onClick={doTranslate} disabled={!canTranslate || loading}>
+            {loading ? <><span className="spinner"></span> Đang dịch...</> : '🔄 Dịch'}
           </button>
           <button className="btn btn-secondary" onClick={doCopy} disabled={!result}>
-            {copied?'✅ Đã sao chép!':'&#128203; Sao chép'}
+            {copied ? '✅ Đã sao chép!' : '&#128203; Sao chép'}
           </button>
-          <button className="btn btn-secondary" onClick={saveHistory} disabled={!source||!result}>&#128190; Lưu lịch sử</button>
-          <button className="btn btn-secondary" onClick={()=>setShowTplSave(!showTplSave)} disabled={!source}>&#128204; Lưu template</button>
+          <button className="btn btn-secondary" onClick={saveHistory} disabled={!source || !result}>&#128190; Lưu lịch sử</button>
+          <button className="btn btn-secondary" onClick={() => setShowTplSave(!showTplSave)} disabled={!source}>&#128204; Lưu template</button>
         </div>
         {showTplSave && (
           <div style={{display:'flex',gap:8,marginTop:10}}>
             <input className="form-input" placeholder="Tên template..." value={tplName}
-              onChange={e=>setTplName(e.target.value)} onKeyDown={e=>e.key==='Enter'&&saveTemplate()}
+              onChange={e => setTplName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveTemplate()}
               style={{flex:1}}/>
             <button className="btn btn-primary" onClick={saveTemplate} disabled={!tplName.trim()}>Lưu</button>
-            <button className="btn btn-secondary" onClick={()=>setShowTplSave(false)}>Hủy</button>
+            <button className="btn btn-secondary" onClick={() => setShowTplSave(false)}>Hủy</button>
           </div>
         )}
       </div>
-
-      {!loadingTpl && templates.length>0 && (
+      {!loadingTpl && templates.length > 0 && (
         <div className="card">
           <div className="card-title" style={{marginBottom:12}}>&#128204; Templates ({templates.length})</div>
-          {templates.map(t=>(
+          {templates.map(t => (
             <div key={t.id} className="template-item">
               <span className="template-name">{t.name}</span>
-              <span className="template-preview">{t.content.substring(0,100)}{t.content.length>100?'…':''}</span>
-              <button className="btn btn-secondary btn-sm" onClick={()=>setSource(t.content)}>Dùng</button>
-              <button className="btn btn-danger btn-sm btn-icon" onClick={()=>db.collection('templates').doc(t.id).delete()}>&#128465;</button>
+              <span className="template-preview">{t.content.substring(0, 100)}{t.content.length > 100 ? '…' : ''}</span>
+              <button className="btn btn-secondary btn-sm" onClick={() => setSource(t.content)}>Dùng</button>
+              <button className="btn btn-danger btn-sm btn-icon" onClick={() => db.collection('templates').doc(t.id).delete()}>&#128465;</button>
             </div>
           ))}
         </div>
       )}
-
       <div className="card">
         <div className="card-title" style={{marginBottom:12}}>&#128220; Lịch sử dịch ({translations.length})</div>
-        {translations.length>0 && (
+        {translations.length > 0 && (
           <input className="form-input" placeholder="&#128269; Tìm trong lịch sử..." value={histSearch}
-            onChange={e=>setHistSearch(e.target.value)} style={{marginBottom:12}}/>
+            onChange={e => setHistSearch(e.target.value)} style={{marginBottom:12}}/>
         )}
         {loadingTrans ? (
           <div className="loading-state">&#9203; Đang tải...</div>
-        ) : filteredHist.length===0 ? (
+        ) : filteredHist.length === 0 ? (
           <div className="empty-state" style={{padding:24}}>
             <div className="empty-icon">&#128220;</div>
-            <div className="empty-text">{translations.length===0?'Chưa có lịch sử dịch.':'Không tìm thấy.'}</div>
+            <div className="empty-text">{translations.length === 0 ? 'Chưa có lịch sử dịch.' : 'Không tìm thấy.'}</div>
           </div>
-        ) : filteredHist.map(t=>(
+        ) : filteredHist.map(t => (
           <div key={t.id} className="history-item">
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:8}}>
               <div style={{flex:1,minWidth:0}}>
-                <div className="history-source">&#127481;&#127484; {t.source.substring(0,120)}{t.source.length>120?'…':''}</div>
-                <div className="history-result">&#127483;&#127475; {t.result.substring(0,120)}{t.result.length>120?'…':''}</div>
+                <div className="history-source">&#127481;&#127484; {t.source.substring(0, 120)}{t.source.length > 120 ? '…' : ''}</div>
+                <div className="history-result">&#127483;&#127475; {t.result.substring(0, 120)}{t.result.length > 120 ? '…' : ''}</div>
                 <div className="history-time">{formatDT(t.createdAt)}</div>
               </div>
               <div style={{display:'flex',gap:4,flexShrink:0}}>
-                <button className="btn btn-secondary btn-sm" onClick={()=>{setSource(t.source);setResult(t.result);}}>Dùng lại</button>
-                <button className="btn btn-danger btn-sm btn-icon" onClick={()=>db.collection('translations').doc(t.id).delete()}>&#128465;</button>
+                <button className="btn btn-secondary btn-sm" onClick={() => { setSource(t.source); setResult(t.result); }}>Dùng lại</button>
+                <button className="btn btn-danger btn-sm btn-icon" onClick={() => db.collection('translations').doc(t.id).delete()}>&#128465;</button>
               </div>
             </div>
           </div>
@@ -776,15 +881,12 @@ function TranslationTab({ mode }) {
 /* ════════════ APP ════════════ */
 function App() {
   const [activeTab, setActiveTab] = useState('koc');
-  const [theme, setTheme] = useLocalStorage('mediaos_theme','light');
-
-  useEffect(()=>{ document.documentElement.setAttribute('data-theme',theme); },[theme]);
-
+  const [theme, setTheme] = useLocalStorage('mediaos_theme', 'light');
+  useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
   const tabs = [
-    {id:'koc',label:'👥 KOC Database'},
-    {id:'translation',label:'🌐 Translation'}
+    { id: 'koc',         label: '👥 KOC Database' },
+    { id: 'translation', label: '🌐 Translation' }
   ];
-
   return (
     <div id="app">
       <header className="app-header">
@@ -797,21 +899,21 @@ function App() {
         </div>
         <div className="header-actions">
           <button className="btn btn-ghost btn-sm btn-icon"
-            onClick={()=>setTheme(t=>t==='light'?'dark':'light')}
-            title={theme==='light'?'Dark mode':'Light mode'}>
-            {theme==='light'?'🌙':'☀️'}
+            onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}
+            title={theme === 'light' ? 'Dark mode' : 'Light mode'}>
+            {theme === 'light' ? '🌙' : '☀️'}
           </button>
         </div>
       </header>
       <nav className="tab-nav">
-        {tabs.map(tab=>(
-          <button key={tab.id} className={`tab-btn${activeTab===tab.id?' active':''}`}
-            onClick={()=>setActiveTab(tab.id)}>{tab.label}</button>
+        {tabs.map(tab => (
+          <button key={tab.id} className={`tab-btn${activeTab === tab.id ? ' active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}>{tab.label}</button>
         ))}
       </nav>
       <main className="tab-content">
-        {activeTab==='koc' && <KOCDatabaseTab/>}
-        {activeTab==='translation' && <TranslationTab mode={TRANSLATION_MODE}/>}
+        {activeTab === 'koc'         && <KOCDatabaseTab/>}
+        {activeTab === 'translation' && <TranslationTab mode={TRANSLATION_MODE}/>}
       </main>
     </div>
   );
