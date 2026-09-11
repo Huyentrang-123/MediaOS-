@@ -258,31 +258,6 @@
     }
     td input:focus, td select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 
-    .item-list { list-style: none; }
-    .item-list li {
-      padding: 3px 0;
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
-      font-size: 13px;
-    }
-    .item-list li::before { content: '\00B7'; color: var(--accent); font-weight: 700; flex-shrink: 0; }
-
-    .checklist-card { border-left: 3px solid var(--accent); }
-    .checklist-card.completed { border-left-color: var(--success); }
-
-    .date-group { margin-bottom: 24px; }
-    .date-label {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-secondary);
-      background: var(--surface-3);
-      padding: 4px 10px;
-      border-radius: 4px;
-      display: inline-block;
-      margin-bottom: 10px;
-    }
-
     .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
     .toolbar-search { flex: 1; min-width: 200px; }
 
@@ -357,31 +332,6 @@
       display: inline-block;
     }
 
-    .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.5);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 200; padding: 16px;
-    }
-    .modal {
-      background: var(--surface-1);
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      max-width: 480px; width: 100%;
-      max-height: 90vh; overflow-y: auto;
-    }
-    .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; }
-    .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-
-    .notes-box {
-      margin-top: 10px;
-      padding: 8px 12px;
-      background: var(--surface-2);
-      border-radius: var(--radius-sm);
-      font-size: 13px;
-      color: var(--text-secondary);
-    }
-
     @media (max-width: 640px) {
       .tab-content { padding: 12px 14px; }
       .stats-bar { gap: 8px; }
@@ -414,18 +364,12 @@ const { useState, useEffect, useRef, useMemo } = React;
 /* ── UTILS ── */
 const generateId = () => Math.random().toString(36).substr(2,9) + Date.now().toString(36).substr(-4);
 const getToday = () => new Date().toISOString().split('T')[0];
-const formatDate = (d) => {
-  if (!d) return '';
-  const dt = new Date(d + 'T00:00:00');
-  return dt.toLocaleDateString('vi-VN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
-};
 const formatDT = (iso) => {
   if (!iso) return '';
   return new Date(iso).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
 };
 
 /* ── CONSTANTS ── */
-const EDITORS_DEFAULT = ['Editor 1','Editor 2','Editor 3','Editor 4','Editor 5','Editor 6','Editor 7'];
 const KOC_STATUSES = ['Chưa phản hồi','Đang trao đổi','Đã book','Completed','Không hợp tác','Book tiếp video khác'];
 const TRANSLATION_MODE = 'direct';
 
@@ -452,17 +396,6 @@ function useFirestoreCol(col) {
     return unsub;
   }, [col]);
   return [data, loading];
-}
-
-function useEditors() {
-  const [editors, setEditorsState] = useState(EDITORS_DEFAULT);
-  useEffect(() => {
-    const unsub = db.collection('settings').doc('editors').onSnapshot(snap => {
-      if (snap.exists) setEditorsState(snap.data().list || EDITORS_DEFAULT);
-    });
-    return unsub;
-  }, []);
-  return [editors, (list) => db.collection('settings').doc('editors').set({ list })];
 }
 
 /* ── TRANSLATION API ── */
@@ -506,156 +439,7 @@ const StatCard = ({ label, value, color }) => (
   </div>
 );
 
-/* ── SETTINGS MODAL ── */
-function SettingsModal({ editors, onSave, onClose }) {
-  const [names, setNames] = useState([...editors]);
-  const update = (i, v) => { const n=[...names]; n[i]=v; setNames(n); };
-  return (
-    <div className="modal-overlay" onClick={e => e.target===e.currentTarget && onClose()}>
-      <div className="modal">
-        <div className="modal-title">&#9881;&#65039; Cài đặt – Tên Editor</div>
-        <div className="form-grid">
-          {names.map((name,i) => (
-            <div key={i} className="form-group">
-              <label className="form-label">Editor {i+1}</label>
-              <input className="form-input" value={name} onChange={e=>update(i,e.target.value)} placeholder={`Editor ${i+1}`}/>
-            </div>
-          ))}
-        </div>
-        <div className="modal-footer">
-          <button className="btn btn-secondary" onClick={onClose}>Hủy</button>
-          <button className="btn btn-primary" onClick={()=>{onSave(names);onClose();}}>Lưu</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ════════════ TAB 1: DAILY CHECKLIST ════════════ */
-function ChecklistForm({ editors, onAdd }) {
-  const [editor, setEditor] = useState(editors[0]||'');
-  const [date, setDate] = useState(getToday());
-  const [items, setItems] = useState('');
-  const [notes, setNotes] = useState('');
-  const [err, setErr] = useState('');
-
-  useEffect(() => { if (!editor && editors.length) setEditor(editors[0]); }, [editors]);
-
-  const submit = (e) => {
-    e.preventDefault();
-    const list = items.split('\n').map(s=>s.trim()).filter(Boolean);
-    if (!editor.trim()) return setErr('Vui lòng chọn editor.');
-    if (!list.length) return setErr('Vui lòng nhập ít nhất 1 công việc.');
-    setErr('');
-    onAdd({ date, editor, items: list, notes, completed: false, createdAt: new Date().toISOString() });
-    setItems(''); setNotes('');
-  };
-
-  return (
-    <div className="card">
-      <div className="card-title" style={{marginBottom:14}}>&#10133; Thêm Checklist</div>
-      {err && <div className="alert alert-danger">{err}</div>}
-      <form onSubmit={submit}>
-        <div className="form-grid">
-          <div className="form-group">
-            <label className="form-label">Editor</label>
-            <select className="form-select" value={editor} onChange={e=>setEditor(e.target.value)}>
-              {editors.map(ed=><option key={ed} value={ed}>{ed}</option>)}
-            </select>
-          </div>
-          <div className="form-group">
-            <label className="form-label">Ngày</label>
-            <input className="form-input" type="date" value={date} onChange={e=>setDate(e.target.value)}/>
-          </div>
-          <div className="form-group full">
-            <label className="form-label">Công việc hôm nay (mỗi dòng 1 việc)</label>
-            <textarea className="form-textarea" value={items} onChange={e=>setItems(e.target.value)}
-              placeholder="Viết content video sản phẩm A\n Chỉnh sửa video B\nLên kế hoạch C..." style={{minHeight:100}}/>
-          </div>
-          <div className="form-group full">
-            <label className="form-label">Ghi chú (tùy chọn)</label>
-            <textarea className="form-textarea" value={notes} onChange={e=>setNotes(e.target.value)}
-              placeholder="Ghi chú thêm..." style={{minHeight:60}}/>
-          </div>
-        </div>
-        <div style={{marginTop:14}}>
-          <button className="btn btn-primary" type="submit">&#128190; Lưu Checklist</button>
-        </div>
-      </form>
-    </div>
-  );
-}
-
-function ChecklistCard({ item, onToggle, onDelete }) {
-  return (
-    <div className={`card checklist-card${item.completed?' completed':''}`}>
-      <div className="card-header">
-        <div>
-          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:4}}>
-            <span className="card-title">{item.editor}</span>
-            <span className={`badge ${item.completed?'badge-success':'badge-accent'}`}>
-              {item.completed?'✅ Hoàn thành':'⏳ Đang làm'}
-            </span>
-          </div>
-          <div className="card-meta">{item.items.length} công việc · {formatDT(item.createdAt)}</div>
-        </div>
-        <div style={{display:'flex',gap:6,flexShrink:0}}>
-          <button className="btn btn-secondary btn-sm" onClick={()=>onToggle(item.id, !item.completed)}>
-            {item.completed?'↩ Mở lại':'✅ Xong'}
-          </button>
-          <button className="btn btn-danger btn-sm btn-icon" onClick={()=>onDelete(item.id)} title="Xóa">&#128465;</button>
-        </div>
-      </div>
-      <ul className="item-list">{item.items.map((it,i)=><li key={i}>{it}</li>)}</ul>
-      {item.notes && <div className="notes-box">&#128221; {item.notes}</div>}
-    </div>
-  );
-}
-
-function DailyChecklistTab({ editors }) {
-  const [checklists, loading] = useFirestoreCol('checklists');
-  const today = getToday();
-  const todayCount = checklists.filter(c=>c.date===today).length;
-
-  const grouped = useMemo(() => {
-    const sorted = [...checklists].sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt));
-    const map = {};
-    sorted.forEach(c=>{ if(!map[c.date]) map[c.date]=[]; map[c.date].push(c); });
-    return Object.entries(map);
-  }, [checklists]);
-
-  return (
-    <div>
-      <div className="stats-bar">
-        <StatCard label="Hôm nay" value={todayCount} color="accent"/>
-        <StatCard label="Tổng checklist" value={checklists.length}/>
-        <StatCard label="Hoàn thành" value={checklists.filter(c=>c.completed).length} color="success"/>
-        <StatCard label="Đang làm" value={checklists.filter(c=>!c.completed).length}/>
-      </div>
-      <ChecklistForm editors={editors} onAdd={item => db.collection('checklists').add(item)}/>
-      {loading ? (
-        <div className="loading-state">&#9203; Đang tải dữ liệu...</div>
-      ) : grouped.length===0 ? (
-        <div className="empty-state">
-          <div className="empty-icon">&#128203;</div>
-          <div className="empty-text">Chưa có checklist nào. Thêm checklist đầu tiên!</div>
-        </div>
-      ) : grouped.map(([date,items])=>(
-        <div key={date} className="date-group">
-          <div className="date-label">{date===today?'📅 Hôm nay – ':''}{formatDate(date)}</div>
-          {items.map(item=>(
-            <ChecklistCard key={item.id} item={item}
-              onToggle={(id, completed) => db.collection('checklists').doc(id).update({completed})}
-              onDelete={id=>{ if(confirm('Xóa checklist này?')) db.collection('checklists').doc(id).delete(); }}
-            />
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ════════════ TAB 2: KOC DATABASE ════════════ */
+/* ════════════ TAB 1: KOC DATABASE ════════════ */
 function PasteParser({ onAdd }) {
   const [text, setText] = useState('');
   const [msg, setMsg] = useState('');
@@ -817,7 +601,7 @@ function KOCDatabaseTab() {
   );
 }
 
-/* ════════════ TAB 3: TRANSLATION ════════════ */
+/* ════════════ TAB 2: TRANSLATION ════════════ */
 function APISettings({ apiKey, onSave }) {
   const [key, setKey] = useState(apiKey||'');
   const [saved, setSaved] = useState(false);
@@ -991,22 +775,18 @@ function TranslationTab({ mode }) {
 
 /* ════════════ APP ════════════ */
 function App() {
-  const [activeTab, setActiveTab] = useState('checklist');
+  const [activeTab, setActiveTab] = useState('koc');
   const [theme, setTheme] = useLocalStorage('mediaos_theme','light');
-  const [editors, setEditors] = useEditors();
-  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(()=>{ document.documentElement.setAttribute('data-theme',theme); },[theme]);
 
   const tabs = [
-    {id:'checklist',label:'📋 Daily Checklist'},
     {id:'koc',label:'👥 KOC Database'},
     {id:'translation',label:'🌐 Translation'}
   ];
 
   return (
     <div id="app">
-      {showSettings && <SettingsModal editors={editors} onSave={setEditors} onClose={()=>setShowSettings(false)}/>}
       <header className="app-header">
         <div className="app-logo">
           <span className="app-logo-icon">&#127916;</span>
@@ -1016,7 +796,6 @@ function App() {
           </div>
         </div>
         <div className="header-actions">
-          <button className="btn btn-ghost btn-sm btn-icon" onClick={()=>setShowSettings(true)} title="Cài đặt editor">&#9881;&#65039;</button>
           <button className="btn btn-ghost btn-sm btn-icon"
             onClick={()=>setTheme(t=>t==='light'?'dark':'light')}
             title={theme==='light'?'Dark mode':'Light mode'}>
@@ -1031,7 +810,6 @@ function App() {
         ))}
       </nav>
       <main className="tab-content">
-        {activeTab==='checklist' && <DailyChecklistTab editors={editors}/>}
         {activeTab==='koc' && <KOCDatabaseTab/>}
         {activeTab==='translation' && <TranslationTab mode={TRANSLATION_MODE}/>}
       </main>
