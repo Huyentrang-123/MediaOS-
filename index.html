@@ -227,19 +227,50 @@
     .alert-success { background: var(--success-light); color: var(--success-text); border-color: var(--success); }
     .alert-danger { background: var(--danger-light); color: var(--danger-text); border-color: var(--danger); }
 
-    .table-wrapper { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1000px; }
+    /* ── Table dual-scroll wrapper ── */
+    .table-scroll-outer {
+      border-radius: 0 0 var(--radius) var(--radius);
+      overflow: hidden;
+    }
+    .table-top-scroll {
+      overflow-x: auto;
+      overflow-y: hidden;
+      height: 14px;
+      background: var(--surface-3);
+      border-bottom: 1px solid var(--border);
+    }
+    .table-top-scroll::-webkit-scrollbar { height: 8px; }
+    .table-top-scroll::-webkit-scrollbar-track { background: var(--surface-3); }
+    .table-top-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .table-top-scroll-inner { height: 1px; }
+
+    .table-wrapper {
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: calc(100vh - 390px);
+      min-height: 280px;
+    }
+    .table-wrapper::-webkit-scrollbar { width: 8px; height: 8px; }
+    .table-wrapper::-webkit-scrollbar-track { background: var(--surface-3); }
+    .table-wrapper::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 4px; }
+    .table-wrapper::-webkit-scrollbar-corner { background: var(--surface-3); }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1100px; }
     th {
+      position: sticky;
+      top: 0;
+      z-index: 10;
       background: var(--surface-2);
       border: 1px solid var(--border);
-      padding: 8px 10px;
+      padding: 9px 10px;
       text-align: left;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--text-primary);
       text-transform: uppercase;
       letter-spacing: 0.04em;
       white-space: nowrap;
+      box-shadow: 0 1px 0 var(--border);
     }
     td { border: 1px solid var(--border); padding: 7px 10px; color: var(--text-primary); vertical-align: middle; }
     tr:hover td { background: var(--surface-2); }
@@ -454,7 +485,50 @@ const StatCard = ({ label, value, color }) => (
   </div>
 );
 
-/* ── TSV PARSER (RFC4180 – handles quoted multi-line cells from Google Sheets) ── */
+/* ── DUAL-SCROLL TABLE WRAPPER ── */
+function DualScrollTable({ children }) {
+  const topRef = useRef(null);
+  const wrapRef = useRef(null);
+  const [innerWidth, setInnerWidth] = useState(0);
+  const syncing = useRef(false);
+
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const update = () => setInnerWidth(wrap.scrollWidth);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(wrap);
+    return () => ro.disconnect();
+  }, []);
+
+  const onTopScroll = () => {
+    if (syncing.current) return;
+    syncing.current = true;
+    if (wrapRef.current) wrapRef.current.scrollLeft = topRef.current.scrollLeft;
+    requestAnimationFrame(() => { syncing.current = false; });
+  };
+
+  const onWrapScroll = () => {
+    if (syncing.current) return;
+    syncing.current = true;
+    if (topRef.current) topRef.current.scrollLeft = wrapRef.current.scrollLeft;
+    requestAnimationFrame(() => { syncing.current = false; });
+  };
+
+  return (
+    <div className="table-scroll-outer">
+      <div ref={topRef} className="table-top-scroll" onScroll={onTopScroll}>
+        <div className="table-top-scroll-inner" style={{width: innerWidth}}/>
+      </div>
+      <div ref={wrapRef} className="table-wrapper" onScroll={onWrapScroll}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ── TSV PARSER (RFC4180) ── */
 function parseTSVRobust(rawText) {
   const rows = [];
   let row = [], field = '', inQuotes = false, i = 0;
@@ -677,7 +751,7 @@ function KOCDatabaseTab() {
           <div style={{padding:'10px 16px', background:'var(--surface-2)', borderBottom:'1px solid var(--border)', fontSize:12, color:'var(--text-secondary)'}}>
             Hiển thị {filtered.length} / {kocs.length} KOC
           </div>
-          <div className="table-wrapper">
+          <DualScrollTable>
             <table>
               <thead>
                 <tr>
@@ -745,7 +819,7 @@ function KOCDatabaseTab() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </DualScrollTable>
         </div>
       )}
     </div>
