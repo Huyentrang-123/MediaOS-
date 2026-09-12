@@ -258,7 +258,7 @@
     .table-wrapper::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 4px; }
     .table-wrapper::-webkit-scrollbar-corner { background: var(--surface-3); }
 
-    table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1100px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1200px; }
     th {
       position: sticky;
       top: 0;
@@ -577,17 +577,18 @@ function PasteParser({ onAdd }) {
       const status = KOC_STATUSES.includes(rawStatus) ? rawStatus : 'Gửi mail';
 
       kocs.push({
-        name:        (parts[0] || '').trim(),
-        instagram:   (parts[1] || '').trim(),
-        gmail:       (parts[2] || '').trim(),
-        followers:   (parts[3] || '').trim(),
+        name:         (parts[0] || '').trim(),
+        instagram:    (parts[1] || '').trim(),
+        gmail:        (parts[2] || '').trim(),
+        followers:    (parts[3] || '').trim(),
         status,
-        price:       (parts[5] || '').trim(),
-        notes:       (parts[6] || '').trim(),
-        address:     (parts[7] || '').trim(),
-        bankAccount: '',
-        lastContact: getToday(),
-        createdAt:   new Date().toISOString()
+        price:        (parts[5] || '').trim(),
+        notes:        (parts[6] || '').trim(),
+        address:      (parts[7] || '').trim(),
+        bankAccount:  '',
+        contractLink: '',
+        lastContact:  getToday(),
+        createdAt:    new Date().toISOString()
       });
       added++;
     }
@@ -647,6 +648,83 @@ function EditableCell({ value, onChange, type = 'text', options }) {
     <span onClick={() => setEditing(true)} title="Click để chỉnh sửa"
       style={{cursor:'pointer',minWidth:50,display:'inline-block',borderBottom:'1px dashed var(--border)'}}>
       {val || <span style={{color:'var(--text-muted)'}}>&#8211;</span>}
+    </span>
+  );
+}
+
+/* ── CONTRACT LINK CELL ── */
+function ContractLinkCell({ value, onChange }) {
+  const [editing, setEditing] = useState(false);
+  const [val, setVal] = useState(value || '');
+  const ref = useRef(null);
+
+  useEffect(() => { setVal(value || ''); }, [value]);
+  useEffect(() => { if (editing && ref.current) ref.current.focus(); }, [editing]);
+
+  const save = () => {
+    setEditing(false);
+    const trimmed = val.trim();
+    if (trimmed !== (value || '')) onChange(trimmed);
+  };
+
+  if (editing) return (
+    <input
+      ref={ref}
+      value={val}
+      onChange={e => setVal(e.target.value)}
+      onBlur={save}
+      onKeyDown={e => {
+        if (e.key === 'Enter') save();
+        if (e.key === 'Escape') { setEditing(false); setVal(value || ''); }
+      }}
+      placeholder="https://..."
+      style={{minWidth: 200}}
+    />
+  );
+
+  if (val) return (
+    <div style={{display:'flex', alignItems:'center', gap:5, whiteSpace:'nowrap'}}>
+      <a
+        href={val}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          color: 'var(--accent)',
+          fontWeight: 600,
+          fontSize: 12,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 3,
+          textDecoration: 'none'
+        }}
+        title={val}
+      >
+        &#128279; Xem HĐ
+      </a>
+      <button
+        className="btn btn-ghost btn-sm"
+        onClick={() => setEditing(true)}
+        title="Sửa link"
+        style={{padding:'1px 5px', fontSize:11, color:'var(--text-muted)'}}
+      >
+        ✏️
+      </button>
+    </div>
+  );
+
+  return (
+    <span
+      onClick={() => setEditing(true)}
+      title="Thêm link hợp đồng"
+      style={{
+        cursor: 'pointer',
+        color: 'var(--text-muted)',
+        fontSize: 12,
+        borderBottom: '1px dashed var(--border)',
+        whiteSpace: 'nowrap'
+      }}
+    >
+      + Thêm link
     </span>
   );
 }
@@ -768,6 +846,7 @@ function KOCDatabaseTab() {
                   <th>Ghi chú</th>
                   <th>Địa chỉ</th>
                   <th>Số TK</th>
+                  <th>Hợp đồng</th>
                   <th>Liên hệ cuối</th>
                   <th></th>
                 </tr>
@@ -810,6 +889,12 @@ function KOCDatabaseTab() {
                     </td>
                     <td style={{minWidth:130}}>
                       <EditableCell value={k.bankAccount} onChange={v => handleUpdate(k.id, {bankAccount: v})}/>
+                    </td>
+                    <td style={{minWidth:140}}>
+                      <ContractLinkCell
+                        value={k.contractLink || ''}
+                        onChange={v => db.collection('kocs').doc(k.id).update({ contractLink: v })}
+                      />
                     </td>
                     <td style={{whiteSpace:'nowrap', fontSize:12, color:'var(--text-secondary)'}}>
                       {k.lastContact || '&#8211;'}
