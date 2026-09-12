@@ -35,6 +35,9 @@
       --pink: #db2777;
       --pink-light: #fdf2f8;
       --pink-text: #9d174d;
+      --cyan: #0891b2;
+      --cyan-light: #ecfeff;
+      --cyan-text: #164e63;
       --radius: 8px;
       --radius-sm: 5px;
       --radius-lg: 12px;
@@ -57,6 +60,8 @@
       --danger-text: #f87171;
       --pink-light: #2d0a1e;
       --pink-text: #f472b6;
+      --cyan-light: #0a2030;
+      --cyan-text: #67e8f9;
     }
 
     body {
@@ -256,11 +261,12 @@
       font-weight: 600;
       white-space: nowrap;
     }
-    .koc-badge-guimail    { background: var(--warning-light); color: var(--warning-text); }
-    .koc-badge-nhanting   { background: var(--pink-light);    color: var(--pink-text); }
-    .koc-badge-dangtrao   { background: var(--accent-light);  color: var(--accent); }
-    .koc-badge-daxong     { background: var(--success-light); color: var(--success-text); }
-    .koc-badge-khonghop   { background: var(--surface-3);     color: var(--text-secondary); }
+    .koc-badge-guimail      { background: var(--warning-light); color: var(--warning-text); }
+    .koc-badge-nhanting     { background: var(--pink-light);    color: var(--pink-text); }
+    .koc-badge-dangtrao     { background: var(--accent-light);  color: var(--accent); }
+    .koc-badge-dongyhoptac  { background: var(--cyan-light);    color: var(--cyan-text); }
+    .koc-badge-daxong       { background: var(--success-light); color: var(--success-text); }
+    .koc-badge-khonghop     { background: var(--surface-3);     color: var(--text-secondary); }
 
     .translation-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
     @media (max-width: 768px) { .translation-grid { grid-template-columns: 1fr; } }
@@ -361,14 +367,15 @@ const formatDT = (iso) => {
 };
 
 /* ── CONSTANTS ── */
-const KOC_STATUSES = ['Gửi mail', 'Nhắn tin IG', 'Đang trao đổi', 'Đã xong', 'Không hợp tác'];
+const KOC_STATUSES = ['Gửi mail', 'Nhắn tin IG', 'Đang trao đổi', 'Đồng ý hợp tác', 'Đã xong', 'Không hợp tác'];
 
 function kocBadgeClass(status) {
-  if (status === 'Gửi mail')       return 'koc-badge koc-badge-guimail';
-  if (status === 'Nhắn tin IG')    return 'koc-badge koc-badge-nhanting';
-  if (status === 'Đang trao đổi')  return 'koc-badge koc-badge-dangtrao';
-  if (status === 'Đã xong')        return 'koc-badge koc-badge-daxong';
-  if (status === 'Không hợp tác') return 'koc-badge koc-badge-khonghop';
+  if (status === 'Gửi mail')          return 'koc-badge koc-badge-guimail';
+  if (status === 'Nhắn tin IG')       return 'koc-badge koc-badge-nhanting';
+  if (status === 'Đang trao đổi')     return 'koc-badge koc-badge-dangtrao';
+  if (status === 'Đồng ý hợp tác')   return 'koc-badge koc-badge-dongyhoptac';
+  if (status === 'Đã xong')           return 'koc-badge koc-badge-daxong';
+  if (status === 'Không hợp tác')    return 'koc-badge koc-badge-khonghop';
   return 'koc-badge koc-badge-khonghop';
 }
 
@@ -465,7 +472,7 @@ function parseTSVRobust(rawText) {
   return rows;
 }
 
-/* ════════════ TAB 1: KOC DATABASE ════════════ */
+/* ══════════ TAB 1: KOC DATABASE ══════════ */
 function PasteParser({ onAdd }) {
   const [text, setText] = useState('');
   const [msg, setMsg] = useState(null);
@@ -482,7 +489,6 @@ function PasteParser({ onAdd }) {
     for (const parts of rows) {
       if (!(parts[0] || '').trim()) { skipped++; continue; }
 
-      /* cấu trúc cột trong sheet: Tên | Link IG | Gmail | Follow IG | Trạng thái | Báo giá | Note | Địa chỉ */
       const rawStatus = (parts[4] || '').trim();
       const status = KOC_STATUSES.includes(rawStatus) ? rawStatus : 'Gửi mail';
 
@@ -624,17 +630,17 @@ function KOCDatabaseTab() {
   const stats = useMemo(() => ({
     total:       kocs.length,
     negotiating: kocs.filter(k => k.status === 'Đang trao đổi').length,
+    agreed:      kocs.filter(k => k.status === 'Đồng ý hợp tác').length,
     booked:      kocs.filter(k => k.status === 'Đã xong').length,
-    completed:   kocs.filter(k => k.status === 'Không hợp tác').length,
   }), [kocs]);
 
   return (
     <div>
       <div className="stats-bar">
-        <StatCard label="Tổng KOC"       value={stats.total}/>
-        <StatCard label="Đang trao đổi"  value={stats.negotiating} color="accent"/>
-        <StatCard label="Đã xong"         value={stats.booked}      color="success"/>
-        <StatCard label="Không hợp tác"  value={stats.completed}   color="danger"/>
+        <StatCard label="Tổng KOC"          value={stats.total}/>
+        <StatCard label="Đang trao đổi"     value={stats.negotiating} color="accent"/>
+        <StatCard label="Đồng ý hợp tác"   value={stats.agreed}      color="success"/>
+        <StatCard label="Đã xong"            value={stats.booked}      color="warning"/>
       </div>
 
       <PasteParser onAdd={newKocs => newKocs.forEach(k => db.collection('kocs').add(k))}/>
@@ -739,7 +745,7 @@ function KOCDatabaseTab() {
   );
 }
 
-/* ════════════ TAB 2: TRANSLATION ════════════ */
+/* ══════════ TAB 2: TRANSLATION ══════════ */
 function APISettings({ apiKey, onSave }) {
   const [key, setKey] = useState(apiKey || '');
   const [saved, setSaved] = useState(false);
@@ -904,7 +910,7 @@ function TranslationTab({ mode }) {
   );
 }
 
-/* ════════════ APP ════════════ */
+/* ══════════ APP ══════════ */
 function App() {
   const [activeTab, setActiveTab] = useState('koc');
   const [theme, setTheme] = useLocalStorage('mediaos_theme', 'light');
