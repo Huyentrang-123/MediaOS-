@@ -75,8 +75,8 @@
     #app { min-height: 100vh; display: flex; flex-direction: column; }
 
     .app-header {
-      background: var(--surface-1);
-      border-bottom: 1px solid var(--border);
+      background: #fce7f3;
+      border-bottom: 1px solid #f9a8d4;
       padding: 0 20px;
       height: 56px;
       display: flex;
@@ -87,9 +87,16 @@
       z-index: 100;
     }
 
-    .app-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; }
+    [data-theme="dark"] .app-header {
+      background: #2d1020;
+      border-bottom-color: #5b2040;
+    }
+
+    .app-logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 17px; color: #9d174d; }
+    [data-theme="dark"] .app-logo { color: #f472b6; }
     .app-logo-icon { font-size: 22px; }
-    .app-logo-sub { font-size: 11px; font-weight: 400; color: var(--text-secondary); }
+    .app-logo-sub { font-size: 11px; font-weight: 700; color: #be185d; }
+    [data-theme="dark"] .app-logo-sub { color: #f9a8d4; }
     .header-actions { display: flex; align-items: center; gap: 6px; }
 
     .tab-nav {
