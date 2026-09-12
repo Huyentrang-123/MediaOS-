@@ -75,8 +75,8 @@
     #app { min-height: 100vh; display: flex; flex-direction: column; }
 
     .app-header {
-      background: #fce7f3;
-      border-bottom: 1px solid #f9a8d4;
+      background: #a8326a;
+      border-bottom: 1px solid #8b2556;
       padding: 0 20px;
       height: 56px;
       display: flex;
@@ -88,16 +88,16 @@
     }
 
     [data-theme="dark"] .app-header {
-      background: #2d1020;
-      border-bottom-color: #5b2040;
+      background: #5a1035;
+      border-bottom-color: #7a1a4a;
     }
 
-    .app-logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 17px; color: #9d174d; }
-    [data-theme="dark"] .app-logo { color: #f472b6; }
+    .app-logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 17px; color: #ffffff; }
     .app-logo-icon { font-size: 22px; }
-    .app-logo-sub { font-size: 11px; font-weight: 700; color: #be185d; }
-    [data-theme="dark"] .app-logo-sub { color: #f9a8d4; }
+    .app-logo-sub { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.82); }
     .header-actions { display: flex; align-items: center; gap: 6px; }
+    .app-header .btn-ghost { color: rgba(255,255,255,0.85); }
+    .app-header .btn-ghost:hover:not(:disabled) { background: rgba(255,255,255,0.15); color: #ffffff; }
 
     .tab-nav {
       background: var(--surface-1);
@@ -157,7 +157,7 @@
       padding: 20px;
       margin-bottom: 16px;
     }
-    .card-title { font-size: 15px; font-weight: 600; }
+    .card-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
     .card-meta { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
 
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -330,7 +330,7 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .spinner {
       width: 14px; height: 14px;
-      border: 2px solid var(--border);
+      border: 2px solid rgba(255,255,255,0.3);
       border-top-color: var(--accent);
       border-radius: 50%;
       animation: spin 0.6s linear infinite;
