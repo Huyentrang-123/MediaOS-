@@ -451,7 +451,7 @@ async function translateDirect(text, apiKey) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{
-          parts: [{ text: `Bạn là dịch giả chuyên nghiệp. Hãy dịch đoạn văn bản sau từ tiếng Trung phồn thể (Đài Loan) sang tiếng Việt tự nhiên, chính xác. Chỉ trả về bản dịch, không giải thích:\n\n${text}` }]
+          parts: [{ text: `Bạn là dịch giả chuyên nghiệp về tiếng Việt thông dụng. Hãy dịch đoạn văn bản sau từ tiếng Trung phồn thể (Đài Loan) sang tiếng Việt tự nhiên, thân mật như người Việt hay nói hàng ngày (dùng "mình/bạn" thay vì "tôi", tránh dùng từ quá trang trọng). Chỉ trả về bản dịch, không giải thích, không chú thích:\n\n${text}` }]
         }],
         generationConfig: { maxOutputTokens: 2048 }
       })
