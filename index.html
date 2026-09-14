@@ -795,12 +795,7 @@ function APISettings({ apiKey, onSave }) {
   const [saved, setSaved] = useState(false);
   const handleSave = () => { onSave(key.trim()); setSaved(true); setTimeout(() => setSaved(false), 2000); };
 
-  if (apiKey) return (
-    <div className="alert alert-success" style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
-      <span>&#10003; Gemini API key đã được cấu hình</span>
-      <button className="btn btn-secondary btn-sm" onClick={() => onSave('')}>Xóa key</button>
-    </div>
-  );
+  if (apiKey) return null;
 
   return (
     <div className="api-settings">
@@ -817,6 +812,51 @@ function APISettings({ apiKey, onSave }) {
           {saved ? '✅ Đã lưu' : 'Lưu key'}
         </button>
       </div>
+    </div>
+  );
+}
+
+function TemplateList({ templates, onUse, db }) {
+  const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editName, setEditName] = useState('');
+
+  const startEdit = (t) => { setEditingId(t.id); setEditName(t.name); };
+  const saveEdit = (id) => {
+    if (editName.trim()) db.collection('templates').doc(id).update({ name: editName.trim() });
+    setEditingId(null);
+  };
+
+  return (
+    <div className="card" style={{marginBottom:16}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer'}}
+        onClick={() => setOpen(o => !o)}>
+        <div className="card-title" style={{marginBottom:0}}>&#128204; Templates ({templates.length})</div>
+        <span style={{fontSize:18,color:'var(--text-muted)',userSelect:'none'}}>{open ? '▲' : '▼'}</span>
+      </div>
+      {open && (
+        <div style={{marginTop:12}}>
+          {templates.map(t => (
+            <div key={t.id} className="template-item">
+              {editingId === t.id ? (
+                <input className="form-input" style={{flex:1,fontSize:13,padding:'4px 8px'}}
+                  value={editName} onChange={e => setEditName(e.target.value)}
+                  onKeyDown={e => { if(e.key==='Enter') saveEdit(t.id); if(e.key==='Escape') setEditingId(null); }}
+                  autoFocus/>
+              ) : (
+                <span className="template-name" style={{cursor:'pointer'}} title="Click để sửa tên"
+                  onClick={() => startEdit(t)}>{t.name}</span>
+              )}
+              <span className="template-preview">{t.content.substring(0,80)}{t.content.length>80?'…':''}</span>
+              {editingId === t.id
+                ? <button className="btn btn-primary btn-sm" onClick={() => saveEdit(t.id)}>Lưu</button>
+                : <button className="btn btn-secondary btn-sm" onClick={() => onUse(t.content)}>Dùng</button>
+              }
+              <button className="btn btn-danger btn-sm btn-icon" onClick={() => db.collection('templates').doc(t.id).delete()}>&#128465;</button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -911,17 +951,7 @@ function TranslationTab({ mode }) {
         )}
       </div>
       {!loadingTpl && templates.length > 0 && (
-        <div className="card">
-          <div className="card-title" style={{marginBottom:12}}>&#128204; Templates ({templates.length})</div>
-          {templates.map(t => (
-            <div key={t.id} className="template-item">
-              <span className="template-name">{t.name}</span>
-              <span className="template-preview">{t.content.substring(0,100)}{t.content.length>100?'…':''}</span>
-              <button className="btn btn-secondary btn-sm" onClick={() => setSource(t.content)}>Dùng</button>
-              <button className="btn btn-danger btn-sm btn-icon" onClick={() => db.collection('templates').doc(t.id).delete()}>&#128465;</button>
-            </div>
-          ))}
-        </div>
+        <TemplateList templates={templates} onUse={c => setSource(c)} db={db}/>
       )}
       <div className="card">
         <div className="card-title" style={{marginBottom:12}}>&#128220; Lịch sử dịch ({translations.length})</div>
