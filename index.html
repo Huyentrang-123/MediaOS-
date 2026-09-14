@@ -1003,7 +1003,7 @@ function TranslationTab({ mode }) {
 }
 
 function App() {
-  const [activeTab, setActiveTab] = useState('koc');
+  const [activeTab, setActiveTab] = useLocalStorage('marcomos_active_tab', 'koc');
   const [theme, setTheme] = useLocalStorage('marcomos_theme', 'light');
   useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
   const tabs = [
