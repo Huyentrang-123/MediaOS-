@@ -230,7 +230,6 @@
     .alert-success { background: var(--success-light); color: var(--success-text); border-color: var(--success); }
     .alert-danger { background: var(--danger-light); color: var(--danger-text); border-color: var(--danger); }
 
-    /* ── Table dual-scroll wrapper ── */
     .table-scroll-outer {
       border-radius: 0 0 var(--radius) var(--radius);
       overflow: hidden;
@@ -293,7 +292,6 @@
     .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
     .toolbar-search { flex: 1; min-width: 200px; }
 
-    /* Status badges */
     .koc-badge {
       display: inline-flex;
       padding: 3px 10px;
@@ -400,14 +398,12 @@
 <script type="text/babel">
 const { useState, useEffect, useRef, useMemo } = React;
 
-/* ── UTILS ── */
 const getToday = () => new Date().toISOString().split('T')[0];
 const formatDT = (iso) => {
   if (!iso) return '';
   return new Date(iso).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
 };
 
-/* ── CONSTANTS ── */
 const KOC_STATUSES = ['Gửi mail', 'Nhắn tin IG', 'Đang trao đổi', 'Đồng ý hợp tác', 'Đã xong', 'Không hợp tác'];
 
 function kocBadgeClass(status) {
@@ -422,7 +418,6 @@ function kocBadgeClass(status) {
 
 const TRANSLATION_MODE = 'direct';
 
-/* ── HOOKS ── */
 function useLocalStorage(key, initial) {
   const [val, setVal] = useState(() => {
     try { const s = localStorage.getItem(key); return s !== null ? JSON.parse(s) : initial; }
@@ -447,26 +442,27 @@ function useFirestoreCol(col) {
   return [data, loading];
 }
 
-/* ── TRANSLATION API ── */
+/* ── GEMINI TRANSLATION API ── */
 async function translateDirect(text, apiKey) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2048,
-      messages: [{ role: 'user', content:
-        `Bạn là dịch giả chuyên nghiệp. Hãy dịch đoạn văn bản sau từ tiếng Trung phồn thể (Đài Loan) sang tiếng Việt tự nhiên, chính xác. Chỉ trả về bản dịch, không giải thích:\n\n${text}` }]
-    })
-  });
-  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || `Lỗi API: ${res.status}`); }
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: `Bạn là dịch giả chuyên nghiệp. Hãy dịch đoạn văn bản sau từ tiếng Trung phồn thể (Đài Loan) sang tiếng Việt tự nhiên, chính xác. Chỉ trả về bản dịch, không giải thích:\n\n${text}` }]
+        }],
+        generationConfig: { maxOutputTokens: 2048 }
+      })
+    }
+  );
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e.error?.message || `Lỗi API: ${res.status}`);
+  }
   const d = await res.json();
-  return d.content[0].text;
+  return d.candidates[0].content.parts[0].text;
 }
 
 async function translateProxy(text) {
@@ -480,7 +476,6 @@ async function translateProxy(text) {
   return d.translation;
 }
 
-/* ── SHARED COMPONENTS ── */
 const StatCard = ({ label, value, color }) => (
   <div className="stat-card">
     <div className="stat-label">{label}</div>
@@ -488,7 +483,6 @@ const StatCard = ({ label, value, color }) => (
   </div>
 );
 
-/* ── DUAL-SCROLL TABLE WRAPPER ── */
 function DualScrollTable({ children }) {
   const topRef = useRef(null);
   const wrapRef = useRef(null);
@@ -531,7 +525,6 @@ function DualScrollTable({ children }) {
   );
 }
 
-/* ── TSV PARSER (RFC4180) ── */
 function parseTSVRobust(rawText) {
   const rows = [];
   let row = [], field = '', inQuotes = false, i = 0;
@@ -556,7 +549,6 @@ function parseTSVRobust(rawText) {
   return rows;
 }
 
-/* ══════════ TAB 1: KOC DATABASE ══════════ */
 function PasteParser({ onAdd }) {
   const [text, setText] = useState('');
   const [msg, setMsg] = useState(null);
@@ -572,32 +564,21 @@ function PasteParser({ onAdd }) {
 
     for (const parts of rows) {
       if (!(parts[0] || '').trim()) { skipped++; continue; }
-
       const rawStatus = (parts[4] || '').trim();
       const status = KOC_STATUSES.includes(rawStatus) ? rawStatus : 'Gửi mail';
-
       kocs.push({
-        name:         (parts[0] || '').trim(),
-        instagram:    (parts[1] || '').trim(),
-        gmail:        (parts[2] || '').trim(),
-        followers:    (parts[3] || '').trim(),
-        status,
-        price:        (parts[5] || '').trim(),
-        notes:        (parts[6] || '').trim(),
-        address:      (parts[7] || '').trim(),
-        bankAccount:  '',
-        contractLink: '',
-        lastContact:  getToday(),
-        createdAt:    new Date().toISOString()
+        name: (parts[0] || '').trim(), instagram: (parts[1] || '').trim(),
+        gmail: (parts[2] || '').trim(), followers: (parts[3] || '').trim(),
+        status, price: (parts[5] || '').trim(), notes: (parts[6] || '').trim(),
+        address: (parts[7] || '').trim(), bankAccount: '', contractLink: '',
+        lastContact: getToday(), createdAt: new Date().toISOString()
       });
       added++;
     }
 
     if (kocs.length) onAdd(kocs);
     setMsg({ type: added ? 'success' : 'danger',
-             text: added
-               ? `✅ Đã thêm ${added} KOC${skipped ? ` · Bỏ qua ${skipped} dòng trống` : ''}`
-               : '⚠️ Không có dữ liệu hợp lệ để thêm' });
+             text: added ? `✅ Đã thêm ${added} KOC${skipped ? ` · Bỏ qua ${skipped} dòng trống` : ''}` : '⚠️ Không có dữ liệu hợp lệ để thêm' });
     setText('');
     setTimeout(() => setMsg(null), 4000);
   };
@@ -619,7 +600,7 @@ function PasteParser({ onAdd }) {
   );
 }
 
-function EditableCell({ value, onChange, type = 'text', options }) {
+function EditableCell({ value, onChange }) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(value);
   const ref = useRef(null);
@@ -628,14 +609,6 @@ function EditableCell({ value, onChange, type = 'text', options }) {
   useEffect(() => { if (editing && ref.current) ref.current.focus(); }, [editing]);
 
   const save = () => { setEditing(false); if (val !== value) onChange(val); };
-
-  if (type === 'select') return (
-    <select ref={ref} value={val}
-      onChange={e => { setVal(e.target.value); onChange(e.target.value); }}
-      style={{minWidth: 130}}>
-      {options.map(o => <option key={o} value={o}>{o}</option>)}
-    </select>
-  );
 
   if (editing) return (
     <input ref={ref} value={val} onChange={e => setVal(e.target.value)}
@@ -652,7 +625,6 @@ function EditableCell({ value, onChange, type = 'text', options }) {
   );
 }
 
-/* ── CONTRACT LINK CELL ── */
 function ContractLinkCell({ value, onChange }) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(value || '');
@@ -668,62 +640,25 @@ function ContractLinkCell({ value, onChange }) {
   };
 
   if (editing) return (
-    <input
-      ref={ref}
-      value={val}
-      onChange={e => setVal(e.target.value)}
+    <input ref={ref} value={val} onChange={e => setVal(e.target.value)}
       onBlur={save}
-      onKeyDown={e => {
-        if (e.key === 'Enter') save();
-        if (e.key === 'Escape') { setEditing(false); setVal(value || ''); }
-      }}
-      placeholder="https://..."
-      style={{minWidth: 200}}
-    />
+      onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') { setEditing(false); setVal(value || ''); } }}
+      placeholder="https://..." style={{minWidth: 200}}/>
   );
 
   if (val) return (
     <div style={{display:'flex', alignItems:'center', gap:5, whiteSpace:'nowrap'}}>
-      <a
-        href={val}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          color: 'var(--accent)',
-          fontWeight: 600,
-          fontSize: 12,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 3,
-          textDecoration: 'none'
-        }}
-        title={val}
-      >
-        &#128279; Xem HĐ
-      </a>
-      <button
-        className="btn btn-ghost btn-sm"
-        onClick={() => setEditing(true)}
-        title="Sửa link"
-        style={{padding:'1px 5px', fontSize:11, color:'var(--text-muted)'}}
-      >
-        ✏️
-      </button>
+      <a href={val} target="_blank" rel="noopener noreferrer"
+        style={{color:'var(--accent)',fontWeight:600,fontSize:12,display:'flex',alignItems:'center',gap:3,textDecoration:'none'}}
+        title={val}>&#128279; Xem HĐ</a>
+      <button className="btn btn-ghost btn-sm" onClick={() => setEditing(true)} title="Sửa link"
+        style={{padding:'1px 5px',fontSize:11,color:'var(--text-muted)'}}>&#9999;&#65039;</button>
     </div>
   );
 
   return (
-    <span
-      onClick={() => setEditing(true)}
-      title="Thêm link hợp đồng"
-      style={{
-        cursor: 'pointer',
-        color: 'var(--text-muted)',
-        fontSize: 12,
-        borderBottom: '1px dashed var(--border)',
-        whiteSpace: 'nowrap'
-      }}
-    >
+    <span onClick={() => setEditing(true)} title="Thêm link hợp đồng"
+      style={{cursor:'pointer',color:'var(--text-muted)',fontSize:12,borderBottom:'1px dashed var(--border)',whiteSpace:'nowrap'}}>
       + Thêm link
     </span>
   );
@@ -742,23 +677,14 @@ function KOCStatusCell({ value, onChange }) {
 
   return (
     <div ref={ref} style={{position:'relative'}}>
-      <span className={kocBadgeClass(value)} onClick={() => setOpen(o => !o)}
-        style={{cursor:'pointer'}}>{value || '&#8211;'}</span>
+      <span className={kocBadgeClass(value)} onClick={() => setOpen(o => !o)} style={{cursor:'pointer'}}>{value || '&#8211;'}</span>
       {open && (
-        <div style={{
-          position:'absolute', top:'100%', left:0, zIndex:50,
-          background:'var(--surface-1)', border:'1px solid var(--border)',
-          borderRadius:'var(--radius)', boxShadow:'0 4px 12px rgba(0,0,0,0.12)',
-          minWidth:160, marginTop:2
-        }}>
+        <div style={{position:'absolute',top:'100%',left:0,zIndex:50,background:'var(--surface-1)',border:'1px solid var(--border)',borderRadius:'var(--radius)',boxShadow:'0 4px 12px rgba(0,0,0,0.12)',minWidth:160,marginTop:2}}>
           {KOC_STATUSES.map(s => (
             <div key={s} onClick={() => { onChange(s); setOpen(false); }}
-              style={{
-                padding:'8px 12px', cursor:'pointer', fontSize:13,
-                background: s === value ? 'var(--surface-2)' : 'transparent'
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
-              onMouseLeave={e => e.currentTarget.style.background = s === value ? 'var(--surface-2)' : 'transparent'}>
+              style={{padding:'8px 12px',cursor:'pointer',fontSize:13,background:s===value?'var(--surface-2)':'transparent'}}
+              onMouseEnter={e => e.currentTarget.style.background='var(--surface-2)'}
+              onMouseLeave={e => e.currentTarget.style.background=s===value?'var(--surface-2)':'transparent'}>
               <span className={kocBadgeClass(s)}>{s}</span>
             </div>
           ))}
@@ -773,63 +699,49 @@ function KOCDatabaseTab() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  const handleUpdate = (id, changes) =>
-    db.collection('kocs').doc(id).update({ ...changes, lastContact: getToday() });
+  const handleUpdate = (id, changes) => db.collection('kocs').doc(id).update({ ...changes, lastContact: getToday() });
+  const handleDelete = (id) => { if (confirm('Xóa KOC này?')) db.collection('kocs').doc(id).delete(); };
 
-  const handleDelete = (id) => {
-    if (confirm('Xóa KOC này?')) db.collection('kocs').doc(id).delete();
-  };
-
-  const filtered = useMemo(() => {
-    return kocs.filter(k => {
-      const q = search.toLowerCase();
-      const ms = !q || k.name.toLowerCase().includes(q) || (k.instagram||'').toLowerCase().includes(q) || (k.gmail||'').toLowerCase().includes(q);
-      const mf = !statusFilter || k.status === statusFilter;
-      return ms && mf;
-    });
-  }, [kocs, search, statusFilter]);
+  const filtered = useMemo(() => kocs.filter(k => {
+    const q = search.toLowerCase();
+    const ms = !q || k.name.toLowerCase().includes(q) || (k.instagram||'').toLowerCase().includes(q) || (k.gmail||'').toLowerCase().includes(q);
+    return ms && (!statusFilter || k.status === statusFilter);
+  }), [kocs, search, statusFilter]);
 
   const stats = useMemo(() => ({
-    total:       kocs.length,
+    total: kocs.length,
     negotiating: kocs.filter(k => k.status === 'Đang trao đổi').length,
-    agreed:      kocs.filter(k => k.status === 'Đồng ý hợp tác').length,
-    booked:      kocs.filter(k => k.status === 'Đã xong').length,
+    agreed: kocs.filter(k => k.status === 'Đồng ý hợp tác').length,
+    booked: kocs.filter(k => k.status === 'Đã xong').length,
   }), [kocs]);
 
   return (
     <div>
       <div className="stats-bar">
-        <StatCard label="Tổng KOC"          value={stats.total}/>
-        <StatCard label="Đang trao đổi"     value={stats.negotiating} color="accent"/>
-        <StatCard label="Đồng ý hợp tác"   value={stats.agreed}      color="success"/>
-        <StatCard label="Đã xong"            value={stats.booked}      color="warning"/>
+        <StatCard label="Tổng KOC" value={stats.total}/>
+        <StatCard label="Đang trao đổi" value={stats.negotiating} color="accent"/>
+        <StatCard label="Đồng ý hợp tác" value={stats.agreed} color="success"/>
+        <StatCard label="Đã xong" value={stats.booked} color="warning"/>
       </div>
-
       <PasteParser onAdd={newKocs => newKocs.forEach(k => db.collection('kocs').add(k))}/>
-
       <div className="toolbar">
-        <input className="form-input toolbar-search"
-          placeholder="&#128269; Tìm theo tên, Link IG, Gmail..."
+        <input className="form-input toolbar-search" placeholder="&#128269; Tìm theo tên, Link IG, Gmail..."
           value={search} onChange={e => setSearch(e.target.value)}/>
-        <select className="form-select" value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)} style={{minWidth:170}}>
+        <select className="form-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{minWidth:170}}>
           <option value="">Tất cả trạng thái</option>
           {KOC_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
-
       {loading ? (
         <div className="loading-state">&#9203; Đang tải dữ liệu...</div>
       ) : filtered.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">&#128101;</div>
-          <div className="empty-text">
-            {kocs.length === 0 ? 'Chưa có KOC nào. Dán dữ liệu từ Google Sheets để thêm!' : 'Không tìm thấy KOC nào phù hợp.'}
-          </div>
+          <div className="empty-text">{kocs.length === 0 ? 'Chưa có KOC nào. Dán dữ liệu từ Google Sheets để thêm!' : 'Không tìm thấy KOC nào phù hợp.'}</div>
         </div>
       ) : (
-        <div className="card" style={{padding:0, overflow:'hidden'}}>
-          <div style={{padding:'10px 16px', background:'var(--surface-2)', borderBottom:'1px solid var(--border)', fontSize:12, color:'var(--text-secondary)'}}>
+        <div className="card" style={{padding:0,overflow:'hidden'}}>
+          <div style={{padding:'10px 16px',background:'var(--surface-2)',borderBottom:'1px solid var(--border)',fontSize:12,color:'var(--text-secondary)'}}>
             Hiển thị {filtered.length} / {kocs.length} KOC
           </div>
           <DualScrollTable>
@@ -837,72 +749,35 @@ function KOCDatabaseTab() {
               <thead>
                 <tr>
                   <th style={{width:36}}>#</th>
-                  <th>Tên</th>
-                  <th>Link IG</th>
-                  <th>Gmail</th>
-                  <th>Follow IG</th>
-                  <th>Trạng thái</th>
-                  <th>Báo giá (TWD)</th>
-                  <th>Ghi chú</th>
-                  <th>Địa chỉ</th>
-                  <th>Số TK</th>
-                  <th>Hợp đồng</th>
-                  <th>Liên hệ cuối</th>
-                  <th></th>
+                  <th>Tên</th><th>Link IG</th><th>Gmail</th><th>Follow IG</th>
+                  <th>Trạng thái</th><th>Báo giá (TWD)</th><th>Ghi chú</th>
+                  <th>Địa chỉ</th><th>Số TK</th><th>Hợp đồng</th><th>Liên hệ cuối</th><th></th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((k, i) => (
                   <tr key={k.id}>
-                    <td style={{color:'var(--text-muted)',textAlign:'center'}}>{i + 1}</td>
-                    <td style={{minWidth:120, fontWeight:500}}>
-                      <EditableCell value={k.name} onChange={v => handleUpdate(k.id, {name: v})}/>
-                    </td>
+                    <td style={{color:'var(--text-muted)',textAlign:'center'}}>{i+1}</td>
+                    <td style={{minWidth:120,fontWeight:500}}><EditableCell value={k.name} onChange={v => handleUpdate(k.id,{name:v})}/></td>
                     <td style={{minWidth:140}}>
                       {k.instagram && k.instagram.startsWith('http') ? (
-                        <a href={k.instagram} target="_blank" rel="noopener"
-                          style={{color:'var(--accent)',fontSize:12,whiteSpace:'nowrap'}}>
+                        <a href={k.instagram} target="_blank" rel="noopener" style={{color:'var(--accent)',fontSize:12,whiteSpace:'nowrap'}}>
                           {k.instagram.replace('https://www.instagram.com/','@').replace(/\/$/,'')}
                         </a>
-                      ) : (
-                        <EditableCell value={k.instagram} onChange={v => handleUpdate(k.id, {instagram: v})}/>
-                      )}
+                      ) : <EditableCell value={k.instagram} onChange={v => handleUpdate(k.id,{instagram:v})}/>}
                     </td>
-                    <td style={{minWidth:160}}>
-                      <EditableCell value={k.gmail} onChange={v => handleUpdate(k.id, {gmail: v})}/>
-                    </td>
-                    <td style={{minWidth:70}}>
-                      <EditableCell value={k.followers} onChange={v => handleUpdate(k.id, {followers: v})}/>
-                    </td>
-                    <td style={{minWidth:150}}>
-                      <KOCStatusCell value={k.status}
-                        onChange={v => handleUpdate(k.id, {status: v})}/>
-                    </td>
-                    <td style={{minWidth:90}}>
-                      <EditableCell value={k.price} onChange={v => handleUpdate(k.id, {price: v})}/>
-                    </td>
-                    <td style={{minWidth:180}}>
-                      <EditableCell value={k.notes} onChange={v => handleUpdate(k.id, {notes: v})}/>
-                    </td>
-                    <td style={{minWidth:160}}>
-                      <EditableCell value={k.address} onChange={v => handleUpdate(k.id, {address: v})}/>
-                    </td>
-                    <td style={{minWidth:130}}>
-                      <EditableCell value={k.bankAccount} onChange={v => handleUpdate(k.id, {bankAccount: v})}/>
-                    </td>
+                    <td style={{minWidth:160}}><EditableCell value={k.gmail} onChange={v => handleUpdate(k.id,{gmail:v})}/></td>
+                    <td style={{minWidth:70}}><EditableCell value={k.followers} onChange={v => handleUpdate(k.id,{followers:v})}/></td>
+                    <td style={{minWidth:150}}><KOCStatusCell value={k.status} onChange={v => handleUpdate(k.id,{status:v})}/></td>
+                    <td style={{minWidth:90}}><EditableCell value={k.price} onChange={v => handleUpdate(k.id,{price:v})}/></td>
+                    <td style={{minWidth:180}}><EditableCell value={k.notes} onChange={v => handleUpdate(k.id,{notes:v})}/></td>
+                    <td style={{minWidth:160}}><EditableCell value={k.address} onChange={v => handleUpdate(k.id,{address:v})}/></td>
+                    <td style={{minWidth:130}}><EditableCell value={k.bankAccount} onChange={v => handleUpdate(k.id,{bankAccount:v})}/></td>
                     <td style={{minWidth:140}}>
-                      <ContractLinkCell
-                        value={k.contractLink || ''}
-                        onChange={v => db.collection('kocs').doc(k.id).update({ contractLink: v })}
-                      />
+                      <ContractLinkCell value={k.contractLink||''} onChange={v => db.collection('kocs').doc(k.id).update({contractLink:v})}/>
                     </td>
-                    <td style={{whiteSpace:'nowrap', fontSize:12, color:'var(--text-secondary)'}}>
-                      {k.lastContact || '&#8211;'}
-                    </td>
-                    <td>
-                      <button className="btn btn-danger btn-sm btn-icon"
-                        onClick={() => handleDelete(k.id)}>&#128465;</button>
-                    </td>
+                    <td style={{whiteSpace:'nowrap',fontSize:12,color:'var(--text-secondary)'}}>{k.lastContact||'&#8211;'}</td>
+                    <td><button className="btn btn-danger btn-sm btn-icon" onClick={() => handleDelete(k.id)}>&#128465;</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -914,25 +789,28 @@ function KOCDatabaseTab() {
   );
 }
 
-/* ══════════ TAB 2: TRANSLATION ══════════ */
+/* ── API SETTINGS (Gemini) ── */
 function APISettings({ apiKey, onSave }) {
   const [key, setKey] = useState(apiKey || '');
   const [saved, setSaved] = useState(false);
   const handleSave = () => { onSave(key.trim()); setSaved(true); setTimeout(() => setSaved(false), 2000); };
+
   if (apiKey) return (
     <div className="alert alert-success" style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
-      <span>✅ Claude API key đã được cấu hình</span>
+      <span>&#10003; Gemini API key đã được cấu hình</span>
       <button className="btn btn-secondary btn-sm" onClick={() => onSave('')}>Xóa key</button>
     </div>
   );
+
   return (
     <div className="api-settings">
-      <div className="api-settings-title">&#128273; Cấu hình Claude API Key</div>
-      <div style={{fontSize:12,color:'var(--warning-text)',marginBottom:10}}>
-        Nhập Anthropic API key để sử dụng tính năng dịch thuật. Key được lưu trong browser của bạn.
+      <div className="api-settings-title">&#128273; Cấu hình Gemini API Key (Miễn phí)</div>
+      <div style={{fontSize:12,color:'var(--warning-text)',marginBottom:10,lineHeight:1.6}}>
+        Lấy key miễn phí tại <strong>aistudio.google.com</strong> → Get API key → Create API key.<br/>
+        Key được lưu trong browser của bạn, không gửi đi đâu khác.
       </div>
       <div className="api-settings-row">
-        <input className="form-input" type="password" placeholder="sk-ant-..." value={key}
+        <input className="form-input" type="password" placeholder="AIza..." value={key}
           onChange={e => setKey(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSave()}
           style={{flex:1}}/>
         <button className="btn btn-primary" onClick={handleSave} disabled={!key.trim()}>
@@ -1020,14 +898,13 @@ function TranslationTab({ mode }) {
           <button className="btn btn-secondary" onClick={doCopy} disabled={!result}>
             {copied ? '✅ Đã sao chép!' : '&#128203; Sao chép'}
           </button>
-          <button className="btn btn-secondary" onClick={saveHistory} disabled={!source || !result}>&#128190; Lưu lịch sử</button>
+          <button className="btn btn-secondary" onClick={saveHistory} disabled={!source||!result}>&#128190; Lưu lịch sử</button>
           <button className="btn btn-secondary" onClick={() => setShowTplSave(!showTplSave)} disabled={!source}>&#128204; Lưu template</button>
         </div>
         {showTplSave && (
           <div style={{display:'flex',gap:8,marginTop:10}}>
             <input className="form-input" placeholder="Tên template..." value={tplName}
-              onChange={e => setTplName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveTemplate()}
-              style={{flex:1}}/>
+              onChange={e => setTplName(e.target.value)} onKeyDown={e => e.key==='Enter'&&saveTemplate()} style={{flex:1}}/>
             <button className="btn btn-primary" onClick={saveTemplate} disabled={!tplName.trim()}>Lưu</button>
             <button className="btn btn-secondary" onClick={() => setShowTplSave(false)}>Hủy</button>
           </div>
@@ -1039,7 +916,7 @@ function TranslationTab({ mode }) {
           {templates.map(t => (
             <div key={t.id} className="template-item">
               <span className="template-name">{t.name}</span>
-              <span className="template-preview">{t.content.substring(0, 100)}{t.content.length > 100 ? '…' : ''}</span>
+              <span className="template-preview">{t.content.substring(0,100)}{t.content.length>100?'…':''}</span>
               <button className="btn btn-secondary btn-sm" onClick={() => setSource(t.content)}>Dùng</button>
               <button className="btn btn-danger btn-sm btn-icon" onClick={() => db.collection('templates').doc(t.id).delete()}>&#128465;</button>
             </div>
@@ -1057,14 +934,14 @@ function TranslationTab({ mode }) {
         ) : filteredHist.length === 0 ? (
           <div className="empty-state" style={{padding:24}}>
             <div className="empty-icon">&#128220;</div>
-            <div className="empty-text">{translations.length === 0 ? 'Chưa có lịch sử dịch.' : 'Không tìm thấy.'}</div>
+            <div className="empty-text">{translations.length===0?'Chưa có lịch sử dịch.':'Không tìm thấy.'}</div>
           </div>
         ) : filteredHist.map(t => (
           <div key={t.id} className="history-item">
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:8}}>
               <div style={{flex:1,minWidth:0}}>
-                <div className="history-source">&#127481;&#127484; {t.source.substring(0, 120)}{t.source.length > 120 ? '…' : ''}</div>
-                <div className="history-result">&#127483;&#127475; {t.result.substring(0, 120)}{t.result.length > 120 ? '…' : ''}</div>
+                <div className="history-source">&#127481;&#127484; {t.source.substring(0,120)}{t.source.length>120?'…':''}</div>
+                <div className="history-result">&#127483;&#127475; {t.result.substring(0,120)}{t.result.length>120?'…':''}</div>
                 <div className="history-time">{formatDT(t.createdAt)}</div>
               </div>
               <div style={{display:'flex',gap:4,flexShrink:0}}>
@@ -1079,13 +956,12 @@ function TranslationTab({ mode }) {
   );
 }
 
-/* ══════════ APP ══════════ */
 function App() {
   const [activeTab, setActiveTab] = useState('koc');
   const [theme, setTheme] = useLocalStorage('marcomos_theme', 'light');
   useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
   const tabs = [
-    { id: 'koc',         label: '👥 KOC Database' },
+    { id: 'koc', label: '👥 KOC Database' },
     { id: 'translation', label: '🌐 Translation' }
   ];
   return (
@@ -1100,21 +976,21 @@ function App() {
         </div>
         <div className="header-actions">
           <button className="btn btn-ghost btn-sm btn-icon"
-            onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}
-            title={theme === 'light' ? 'Dark mode' : 'Light mode'}>
-            {theme === 'light' ? '🌙' : '☀️'}
+            onClick={() => setTheme(t => t==='light'?'dark':'light')}
+            title={theme==='light'?'Dark mode':'Light mode'}>
+            {theme==='light'?'🌙':'☀️'}
           </button>
         </div>
       </header>
       <nav className="tab-nav">
         {tabs.map(tab => (
-          <button key={tab.id} className={`tab-btn${activeTab === tab.id ? ' active' : ''}`}
+          <button key={tab.id} className={`tab-btn${activeTab===tab.id?' active':''}`}
             onClick={() => setActiveTab(tab.id)}>{tab.label}</button>
         ))}
       </nav>
       <main className="tab-content">
-        {activeTab === 'koc'         && <KOCDatabaseTab/>}
-        {activeTab === 'translation' && <TranslationTab mode={TRANSLATION_MODE}/>}
+        {activeTab==='koc' && <KOCDatabaseTab/>}
+        {activeTab==='translation' && <TranslationTab mode={TRANSLATION_MODE}/>}
       </main>
     </div>
   );
