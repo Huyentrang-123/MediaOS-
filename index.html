@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MediaOS</title>
+  <title>MarcomOS</title>
   <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
   <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.10/babel.min.js"></script>
@@ -75,8 +75,8 @@
     #app { min-height: 100vh; display: flex; flex-direction: column; }
 
     .app-header {
-      background: #a8326a;
-      border-bottom: 1px solid #8b2556;
+      background: #1a5c42;
+      border-bottom: 1px solid #145038;
       padding: 0 20px;
       height: 56px;
       display: flex;
@@ -88,8 +88,8 @@
     }
 
     [data-theme="dark"] .app-header {
-      background: #5a1035;
-      border-bottom-color: #7a1a4a;
+      background: #0d3d2b;
+      border-bottom-color: #1a5c42;
     }
 
     .app-logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 17px; color: #ffffff; }
@@ -944,7 +944,7 @@ function APISettings({ apiKey, onSave }) {
 }
 
 function TranslationTab({ mode }) {
-  const [apiKey, setApiKey] = useLocalStorage('mediaos_api_key', '');
+  const [apiKey, setApiKey] = useLocalStorage('marcomos_api_key', '');
   const [translations, loadingTrans] = useFirestoreCol('translations');
   const [templates, loadingTpl] = useFirestoreCol('templates');
   const [source, setSource] = useState('');
@@ -1082,7 +1082,7 @@ function TranslationTab({ mode }) {
 /* ══════════ APP ══════════ */
 function App() {
   const [activeTab, setActiveTab] = useState('koc');
-  const [theme, setTheme] = useLocalStorage('mediaos_theme', 'light');
+  const [theme, setTheme] = useLocalStorage('marcomos_theme', 'light');
   useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
   const tabs = [
     { id: 'koc',         label: '👥 KOC Database' },
@@ -1094,8 +1094,8 @@ function App() {
         <div className="app-logo">
           <span className="app-logo-icon">&#127916;</span>
           <div>
-            <div>MediaOS</div>
-            <div className="app-logo-sub">Media Department</div>
+            <div>MarcomOS</div>
+            <div className="app-logo-sub">Marcom Department</div>
           </div>
         </div>
         <div className="header-actions">
