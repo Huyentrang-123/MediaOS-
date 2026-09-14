@@ -443,16 +443,17 @@ function useFirestoreCol(col) {
 }
 
 /* ── GEMINI TRANSLATION API ── */
-async function translateDirect(text, apiKey) {
+async function translateDirect(text, apiKey, direction = 'tw_to_vi') {
+  const prompt = direction === 'tw_to_vi'
+    ? `Bạn là dịch giả chuyên nghiệp về tiếng Việt thông dụng. Hãy dịch đoạn văn bản sau từ tiếng Trung phồn thể (Đài Loan) sang tiếng Việt tự nhiên, thân mật như người Việt hay nói hàng ngày (dùng "mình/bạn" thay vì "tôi", tránh dùng từ quá trang trọng). Chỉ trả về bản dịch, không giải thích, không chú thích:\n\n${text}`
+    : `Bạn là dịch giả chuyên nghiệp. Hãy dịch đoạn văn bản sau từ tiếng Việt sang tiếng Trung phồn thể (Đài Loan, dùng phồn thể 繁體中文). Chỉ trả về bản dịch, không giải thích, không chú thích:\n\n${text}`;
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{
-          parts: [{ text: `Bạn là dịch giả chuyên nghiệp về tiếng Việt thông dụng. Hãy dịch đoạn văn bản sau từ tiếng Trung phồn thể (Đài Loan) sang tiếng Việt tự nhiên, thân mật như người Việt hay nói hàng ngày (dùng "mình/bạn" thay vì "tôi", tránh dùng từ quá trang trọng). Chỉ trả về bản dịch, không giải thích, không chú thích:\n\n${text}` }]
-        }],
+        contents: [{ parts: [{ text: prompt }] }],
         generationConfig: { maxOutputTokens: 2048 }
       })
     }
@@ -873,14 +874,20 @@ function TranslationTab({ mode }) {
   const [histSearch, setHistSearch] = useState('');
   const [tplName, setTplName] = useState('');
   const [showTplSave, setShowTplSave] = useState(false);
+  const [direction, setDirection] = useState('tw_to_vi');
 
   const canTranslate = source.trim() && (mode === 'proxy' || apiKey);
+
+  const swapDirection = () => {
+    setDirection(d => d === 'tw_to_vi' ? 'vi_to_tw' : 'tw_to_vi');
+    setSource(result); setResult(''); setError('');
+  };
 
   const doTranslate = async () => {
     if (!canTranslate) return;
     setLoading(true); setError(''); setResult('');
     try {
-      const text = mode === 'proxy' ? await translateProxy(source) : await translateDirect(source, apiKey);
+      const text = mode === 'proxy' ? await translateProxy(source) : await translateDirect(source, apiKey, direction);
       setResult(text);
     } catch (e) { setError(e.message || 'Dịch thất bại. Vui lòng thử lại.'); }
     finally { setLoading(false); }
@@ -917,15 +924,24 @@ function TranslationTab({ mode }) {
       </div>
       {mode === 'direct' && <APISettings apiKey={apiKey} onSave={setApiKey}/>}
       <div className="card">
-        <div className="card-title" style={{marginBottom:14}}>&#127760; Dịch Đài Loan → Việt Nam</div>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+          <div className="card-title" style={{marginBottom:0}}>
+            &#127760; {direction === 'tw_to_vi' ? 'Dịch Đài Loan → Việt Nam' : 'Dịch Việt Nam → Đài Loan'}
+          </div>
+          <button className="btn btn-secondary btn-sm" onClick={swapDirection} title="Đổi chiều dịch">⇄ Đổi chiều</button>
+        </div>
         <div className="translation-grid">
           <div className="translation-panel">
-            <div className="translation-label">&#128229; Tiếng Trung (Đài Loan)</div>
+            <div className="translation-label">
+              {direction === 'tw_to_vi' ? '📥 Tiếng Trung (Đài Loan)' : '📥 Tiếng Việt'}
+            </div>
             <textarea className="form-textarea translation-area" value={source} onChange={e => setSource(e.target.value)}
-              placeholder="Dán văn bản tiếng Trung vào đây..."/>
+              placeholder={direction === 'tw_to_vi' ? 'Dán văn bản tiếng Trung vào đây...' : 'Dán văn bản tiếng Việt vào đây...'}/>
           </div>
           <div className="translation-panel">
-            <div className="translation-label">&#128228; Tiếng Việt</div>
+            <div className="translation-label">
+              {direction === 'tw_to_vi' ? '📤 Tiếng Việt' : '📤 Tiếng Trung (Đài Loan)'}
+            </div>
             <textarea className="form-textarea translation-area" value={result} onChange={e => setResult(e.target.value)}
               placeholder="Bản dịch sẽ xuất hiện ở đây..." readOnly={loading}/>
           </div>
@@ -936,7 +952,7 @@ function TranslationTab({ mode }) {
             {loading ? <><span className="spinner"></span> Đang dịch...</> : '🔄 Dịch'}
           </button>
           <button className="btn btn-secondary" onClick={doCopy} disabled={!result}>
-            {copied ? '✅ Đã sao chép!' : '&#128203; Sao chép'}
+            {copied ? '✅ Đã sao chép!' : 'Sao chép'}
           </button>
           <button className="btn btn-secondary" onClick={saveHistory} disabled={!source||!result}>&#128190; Lưu lịch sử</button>
           <button className="btn btn-secondary" onClick={() => setShowTplSave(!showTplSave)} disabled={!source}>&#128204; Lưu template</button>
