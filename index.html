@@ -1304,14 +1304,17 @@ function VideoAnalysisPanel({ apiKey }) {
   const fileInputRef = React.useRef(null);
 
   const busy = status && status !== 'done' && status !== 'error';
-  const canAnalyze = apiKey && !busy && (inputMode === 'youtube' ? ytUrl.trim() : !!file);
+  const urlVal = ytUrl.trim().toLowerCase();
+  const isNonYTLink = urlVal && !urlVal.includes('youtube.com') && !urlVal.includes('youtu.be') &&
+    (urlVal.includes('tiktok.com') || urlVal.includes('facebook.com') || urlVal.includes('fb.watch') || urlVal.includes('instagram.com'));
+  const canAnalyze = apiKey && !busy && (inputMode === 'url' ? (ytUrl.trim() && !isNonYTLink) : !!file);
 
   const doAnalyze = async () => {
     if (!canAnalyze) return;
     setStatus('analyzing'); setError(''); setResult('');
     try {
       let analysisResult, sourceLabel;
-      if (inputMode === 'youtube') {
+      if (inputMode === 'url') {
         sourceLabel = ytUrl.trim();
         analysisResult = await analyzeVideoGemini(apiKey, { youtubeUrl: ytUrl.trim() });
       } else {
@@ -1354,20 +1357,44 @@ function VideoAnalysisPanel({ apiKey }) {
       <div className="card" style={{marginBottom:16}}>
         <div className="card-title" style={{marginBottom:16}}>📹 Phân tích video</div>
         <div className="video-input-tabs">
-          <button className={`video-input-tab${inputMode==='youtube'?' active':''}`}
-            onClick={() => { setInputMode('youtube'); setFile(null); }}>🔗 Link YouTube</button>
+          <button className={`video-input-tab${inputMode==='url'?' active':''}`}
+            onClick={() => { setInputMode('url'); setFile(null); }}>🔗 Dán link video</button>
           <button className={`video-input-tab${inputMode==='file'?' active':''}`}
             onClick={() => setInputMode('file')}>📁 Tải file lên</button>
         </div>
 
-        {inputMode === 'youtube' ? (
+        {inputMode === 'url' ? (
           <div className="form-group">
-            <label className="form-label">URL YouTube</label>
-            <input className="form-input" placeholder="https://www.youtube.com/watch?v=..."
+            <label className="form-label">Link video</label>
+            <input className="form-input" placeholder="Dán link YouTube, TikTok, Facebook, Instagram..."
               value={ytUrl} onChange={e => setYtUrl(e.target.value)}/>
-            <div style={{fontSize:11,color:'var(--text-muted)',marginTop:4}}>
-              Hỗ trợ YouTube. Với video Instagram/TikTok: tải về máy rồi dùng tab "Tải file lên".
-            </div>
+            {ytUrl.trim() && (() => {
+              const url = ytUrl.trim().toLowerCase();
+              const isYT = url.includes('youtube.com') || url.includes('youtu.be');
+              const isTT = url.includes('tiktok.com');
+              const isFB = url.includes('facebook.com') || url.includes('fb.watch');
+              const isIG = url.includes('instagram.com');
+              if (isYT) return (
+                <div style={{fontSize:11,color:'var(--success)',marginTop:6}}>
+                  ✅ YouTube — Gemini phân tích trực tiếp, không cần tải về.
+                </div>
+              );
+              if (isTT || isFB || isIG) {
+                const name = isTT ? 'TikTok' : isFB ? 'Facebook' : 'Instagram';
+                return (
+                  <div style={{fontSize:12,background:'var(--warning-light)',color:'var(--warning-text)',border:'1px solid var(--warning)',borderRadius:'var(--radius-sm)',padding:'8px 12px',marginTop:8}}>
+                    ⚠️ <strong>{name}</strong> không cho phép AI đọc video từ link trực tiếp.<br/>
+                    <span style={{marginTop:4,display:'block'}}>
+                      👉 Tải video về máy → chuyển sang tab <strong>"Tải file lên"</strong> để phân tích.
+                    </span>
+                    <span style={{marginTop:2,display:'block',fontSize:11,color:'var(--text-muted)'}}>
+                      Gợi ý: dùng <strong>ssstik.io</strong> (TikTok), <strong>fbdown.net</strong> (Facebook), hoặc <strong>igram.world</strong> (Instagram) để tải.
+                    </span>
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </div>
         ) : (
           <div>
