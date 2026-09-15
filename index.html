@@ -587,16 +587,99 @@ function smartClassifyKOCParts(parts) {
   return result;
 }
 
+function parseKOCBlock(rawText) {
+  const result = {
+    name: '', instagram: '', gmail: '', followers: '',
+    status: 'Gửi mail', price: '', address: '', bankAccount: '', notes: '', contractLink: '',
+    lastContact: getToday(), createdAt: new Date().toISOString()
+  };
+  const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
+  const extraNotes = [];
+
+  for (const line of lines) {
+    const colonIdx = line.indexOf('：');
+    if (colonIdx > 0) {
+      const key = line.substring(0, colonIdx).trim();
+      const val = line.substring(colonIdx + 1).trim();
+      if (/帳號/.test(key)) {
+        result.bankAccount = val;
+      } else if (/銀行|分行/.test(key)) {
+        extraNotes.push(`${key}：${val}`);
+      } else if (/地址|住址/.test(key)) {
+        result.address = val;
+      } else if (/追蹤|粉絲/i.test(key)) {
+        result.followers = val;
+      } else if (/價格|費用/i.test(key)) {
+        result.price = val;
+      } else if (/instagram|ig/i.test(key)) {
+        result.instagram = val;
+      } else if (/email|gmail/i.test(key)) {
+        result.gmail = val;
+      } else if (/姓名|名字/i.test(key) && !result.name) {
+        result.name = val;
+      } else {
+        extraNotes.push(`${key}：${val}`);
+      }
+    } else {
+      const noSpace = line.replace(/\s/g, '');
+      if (/^09\d{8}$/.test(noSpace) || /^0\d{9}$/.test(noSpace)) {
+        extraNotes.push(line);
+      } else if (/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(line)) {
+        result.gmail = line;
+      } else if (/^@[a-zA-Z0-9._]{2,40}$/.test(line)) {
+        result.instagram = line;
+      } else if (line.toLowerCase().includes('instagram.com') || line.toLowerCase().includes('instagr.am')) {
+        result.instagram = line;
+      } else if (/[市區路街號樓巷]/.test(line) && line.length > 5) {
+        result.address = line;
+      } else if (/^[一-鿿㐀-䶿]{2,5}$/.test(line)) {
+        if (!result.name) result.name = line;
+      } else if (/^[\d,.]+\s*[kKmM]?$/.test(noSpace) && noSpace.length >= 3) {
+        if (!result.followers) result.followers = line;
+        else result.price = line;
+      } else {
+        extraNotes.push(line);
+      }
+    }
+  }
+
+  if (extraNotes.length > 0) {
+    result.notes = result.notes
+      ? result.notes + ' | ' + extraNotes.join(' | ')
+      : extraNotes.join(' | ');
+  }
+  return result;
+}
+
 function PasteParser({ onAdd }) {
   const [text, setText] = useState('');
   const [msg, setMsg] = useState(null);
 
   const parse = () => {
     const hasTabs = text.includes('\t');
+    const hasPipe = text.includes('|');
+
+    if (!hasTabs && !hasPipe) {
+      // Block mode: split by blank lines, each section = one person
+      const sections = text.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
+      const kocs = [];
+      for (const section of sections) {
+        const koc = parseKOCBlock(section);
+        if (!koc.name && !koc.instagram && !koc.gmail && !koc.bankAccount) continue;
+        kocs.push(koc);
+      }
+      if (kocs.length) onAdd(kocs);
+      setMsg({ type: kocs.length ? 'success' : 'danger',
+               text: kocs.length ? `✅ Đã thêm ${kocs.length} KOC từ block text` : '⚠️ Không có dữ liệu hợp lệ để thêm' });
+      setText('');
+      setTimeout(() => setMsg(null), 4000);
+      return;
+    }
+
     const rows = hasTabs
       ? parseTSVRobust(text)
       : text.split('\n').map(l => l.trim()).filter(Boolean)
-            .map(l => l.includes('|') ? l.split('|') : [l]);
+            .map(l => l.split('|'));
 
     // Skip header row if first row contains column name keywords
     let startRow = 0;
