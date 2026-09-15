@@ -132,6 +132,61 @@
       margin: 0 auto;
       width: 100%;
     }
+    .tab-content--full { padding: 0; max-width: none; margin: 0; }
+
+    /* Content tab layout */
+    .content-tab-layout { display: flex; min-height: calc(100vh - 56px); }
+    .content-sidebar {
+      width: 210px; min-width: 210px;
+      background: var(--surface-1);
+      border-right: 1px solid var(--border);
+      padding: 20px 0; flex-shrink: 0;
+    }
+    .content-sidebar-title {
+      font-size: 14px; font-weight: 700; color: var(--text-primary);
+      padding: 0 16px 14px; letter-spacing: 0.01em;
+    }
+    .content-sidebar-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px; cursor: pointer;
+      color: var(--text-secondary); font-size: 13px;
+      border-left: 3px solid transparent; transition: all 0.15s; user-select: none;
+    }
+    .content-sidebar-item:hover { background: var(--surface-2); color: var(--text-primary); }
+    .content-sidebar-item.active {
+      background: var(--accent-light); color: var(--accent);
+      border-left-color: var(--accent); font-weight: 600;
+    }
+    .content-sidebar-item-icon { font-size: 15px; width: 20px; text-align: center; }
+    .content-main { flex: 1; padding: 24px; overflow-y: auto; max-width: 860px; }
+
+    /* Video analysis */
+    .video-input-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+    .video-input-tab {
+      padding: 8px 16px; font-size: 13px; font-weight: 500;
+      cursor: pointer; color: var(--text-secondary);
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: all 0.15s; background: none;
+      border-top: none; border-left: none; border-right: none; font-family: inherit;
+    }
+    .video-input-tab:hover { color: var(--text-primary); }
+    .video-input-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+    .upload-zone {
+      border: 2px dashed var(--border); border-radius: var(--radius);
+      padding: 32px; text-align: center; cursor: pointer;
+      transition: all 0.15s; background: var(--surface-2);
+    }
+    .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: var(--accent-light); }
+    .analysis-result {
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px;
+      font-size: 13px; line-height: 1.75; max-height: 520px; overflow-y: auto;
+    }
+    .analysis-history-item {
+      border-bottom: 1px solid var(--border); padding: 12px 0;
+      display: flex; gap: 12px; align-items: flex-start;
+    }
+    .analysis-history-item:last-child { border-bottom: none; }
 
     .stats-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
     .stat-card {
@@ -1137,13 +1192,288 @@ function TranslationTab({ mode }) {
   );
 }
 
+/* ── GEMINI VIDEO ANALYSIS ── */
+async function uploadVideoToGemini(file, apiKey) {
+  const startRes = await fetch(
+    `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${apiKey}&uploadType=resumable`,
+    {
+      method: 'POST',
+      headers: {
+        'X-Goog-Upload-Protocol': 'resumable',
+        'X-Goog-Upload-Command': 'start',
+        'X-Goog-Upload-Header-Content-Length': String(file.size),
+        'X-Goog-Upload-Header-Content-Type': file.type || 'video/mp4',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ file: { display_name: file.name } })
+    }
+  );
+  if (!startRes.ok) { const e = await startRes.json().catch(()=>({})); throw new Error(e.error?.message || `Lỗi upload: ${startRes.status}`); }
+  const uploadUrl = startRes.headers.get('X-Goog-Upload-URL');
+  if (!uploadUrl) throw new Error('Không lấy được upload URL');
+  const uploadRes = await fetch(uploadUrl, {
+    method: 'POST',
+    headers: { 'Content-Length': String(file.size), 'X-Goog-Upload-Offset': '0', 'X-Goog-Upload-Command': 'upload, finalize' },
+    body: file
+  });
+  if (!uploadRes.ok) { const e = await uploadRes.json().catch(()=>({})); throw new Error(e.error?.message || `Lỗi upload: ${uploadRes.status}`); }
+  const data = await uploadRes.json();
+  return data.file;
+}
+
+async function waitForGeminiFile(fileName, apiKey) {
+  for (let i = 0; i < 30; i++) {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${apiKey}`);
+    const data = await res.json();
+    if (data.state === 'ACTIVE') return data.uri;
+    if (data.state === 'FAILED') throw new Error('Gemini xử lý video thất bại');
+    await new Promise(r => setTimeout(r, 2000));
+  }
+  throw new Error('Hết thời gian chờ xử lý video');
+}
+
+const VIDEO_ANALYSIS_PROMPT = `Bạn là chuyên gia phân tích nội dung video marketing cho thị trường Đài Loan. Hãy phân tích video này chi tiết theo các mục:
+
+**1. Cấu trúc video**
+- Hook (giây đầu): Cách mở đầu thu hút người xem
+- Phần thân: Vấn đề → bằng chứng → giải pháp
+- CTA: Lời kêu gọi hành động
+
+**2. Điểm mạnh**
+- Kỹ thuật thu hút và giữ người xem
+- Cách trình bày sản phẩm/dịch vụ
+- Ngôn ngữ, cảm xúc, storytelling
+
+**3. Insight thị trường**
+- Đối tượng mục tiêu hướng đến
+- Pain point được khai thác
+- Lý do video này có thể hiệu quả
+
+**4. Đề xuất ứng dụng cho team Marcom**
+- 3-5 điểm có thể học hỏi và áp dụng ngay
+
+Trả lời bằng tiếng Việt, ngắn gọn và có cấu trúc.`;
+
+async function analyzeVideoGemini(apiKey, { fileUri, mimeType, youtubeUrl }) {
+  const parts = [{ text: VIDEO_ANALYSIS_PROMPT }];
+  if (youtubeUrl) {
+    parts.push({ file_data: { file_uri: youtubeUrl } });
+  } else {
+    parts.push({ file_data: { mime_type: mimeType || 'video/mp4', file_uri: fileUri } });
+  }
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts }], generationConfig: { maxOutputTokens: 4096 } }) }
+  );
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || `Lỗi API: ${res.status}`); }
+  const data = await res.json();
+  return data.candidates[0].content.parts[0].text;
+}
+
+function AnalysisResultView({ text }) {
+  const lines = text.split('\n');
+  return (
+    <div className="analysis-result">
+      {lines.map((line, i) => {
+        if (!line.trim()) return <div key={i} style={{height:6}}/>;
+        const html = line.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        if (/^\*\*\d+\./.test(line) || (line.startsWith('**') && line.endsWith('**'))) {
+          return <div key={i} style={{fontWeight:700,fontSize:14,marginTop:14,marginBottom:4,color:'var(--accent)'}}
+            dangerouslySetInnerHTML={{__html: html.replace(/\*\*/g,'')}}/>;
+        }
+        if (line.startsWith('- ') || line.startsWith('• ')) {
+          return <div key={i} style={{paddingLeft:16,marginBottom:3}}
+            dangerouslySetInnerHTML={{__html: '• ' + line.slice(2).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')}}/>;
+        }
+        return <div key={i} style={{marginBottom:3}} dangerouslySetInnerHTML={{__html: html}}/>;
+      })}
+    </div>
+  );
+}
+
+function VideoAnalysisPanel({ apiKey }) {
+  const [inputMode, setInputMode] = useState('youtube');
+  const [ytUrl, setYtUrl] = useState('');
+  const [file, setFile] = useState(null);
+  const [drag, setDrag] = useState(false);
+  const [status, setStatus] = useState('');
+  const [result, setResult] = useState('');
+  const [error, setError] = useState('');
+  const [analyses, loadingAna] = useFirestoreCol('analyses');
+  const fileInputRef = React.useRef(null);
+
+  const busy = status && status !== 'done' && status !== 'error';
+  const canAnalyze = apiKey && !busy && (inputMode === 'youtube' ? ytUrl.trim() : !!file);
+
+  const doAnalyze = async () => {
+    if (!canAnalyze) return;
+    setStatus('analyzing'); setError(''); setResult('');
+    try {
+      let analysisResult, sourceLabel;
+      if (inputMode === 'youtube') {
+        sourceLabel = ytUrl.trim();
+        analysisResult = await analyzeVideoGemini(apiKey, { youtubeUrl: ytUrl.trim() });
+      } else {
+        setStatus('uploading');
+        const uploaded = await uploadVideoToGemini(file, apiKey);
+        setStatus('processing');
+        const fileUri = await waitForGeminiFile(uploaded.name, apiKey);
+        setStatus('analyzing');
+        sourceLabel = file.name;
+        analysisResult = await analyzeVideoGemini(apiKey, { fileUri, mimeType: file.type || 'video/mp4' });
+      }
+      setResult(analysisResult);
+      setStatus('done');
+      db.collection('analyses').add({ source: sourceLabel, result: analysisResult, createdAt: new Date().toISOString() });
+    } catch (e) { setError(e.message || 'Phân tích thất bại'); setStatus('error'); }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault(); setDrag(false);
+    const f = e.dataTransfer.files[0];
+    if (f && f.type.startsWith('video/')) setFile(f);
+  };
+
+  const statusLabel = { uploading:'⬆️ Đang tải video lên...', processing:'⚙️ Gemini đang xử lý video...', analyzing:'🔍 Đang phân tích nội dung...' };
+
+  if (!apiKey) {
+    return (
+      <div className="card">
+        <div style={{textAlign:'center',padding:'40px 0',color:'var(--text-secondary)'}}>
+          <div style={{fontSize:36,marginBottom:12}}>🔑</div>
+          <div style={{fontWeight:600,marginBottom:6}}>Cần API Key</div>
+          <div style={{fontSize:12}}>Vào tab <strong>Translation</strong> để cấu hình Gemini API Key miễn phí</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="card" style={{marginBottom:16}}>
+        <div className="card-title" style={{marginBottom:16}}>📹 Phân tích video</div>
+        <div className="video-input-tabs">
+          <button className={`video-input-tab${inputMode==='youtube'?' active':''}`}
+            onClick={() => { setInputMode('youtube'); setFile(null); }}>🔗 Link YouTube</button>
+          <button className={`video-input-tab${inputMode==='file'?' active':''}`}
+            onClick={() => setInputMode('file')}>📁 Tải file lên</button>
+        </div>
+
+        {inputMode === 'youtube' ? (
+          <div className="form-group">
+            <label className="form-label">URL YouTube</label>
+            <input className="form-input" placeholder="https://www.youtube.com/watch?v=..."
+              value={ytUrl} onChange={e => setYtUrl(e.target.value)}/>
+            <div style={{fontSize:11,color:'var(--text-muted)',marginTop:4}}>
+              Hỗ trợ YouTube. Với video Instagram/TikTok: tải về máy rồi dùng tab "Tải file lên".
+            </div>
+          </div>
+        ) : (
+          <div>
+            <input type="file" ref={fileInputRef} accept="video/*" style={{display:'none'}}
+              onChange={e => setFile(e.target.files[0] || null)}/>
+            <div className={`upload-zone${drag?' drag':''}`}
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={e => { e.preventDefault(); setDrag(true); }}
+              onDragLeave={() => setDrag(false)}
+              onDrop={handleDrop}>
+              {file ? (
+                <div>
+                  <div style={{fontSize:28,marginBottom:6}}>🎬</div>
+                  <div style={{fontWeight:600,fontSize:13}}>{file.name}</div>
+                  <div style={{fontSize:11,color:'var(--text-muted)',marginTop:4}}>{(file.size/1024/1024).toFixed(1)} MB</div>
+                  <button className="btn btn-ghost btn-sm" style={{marginTop:8}}
+                    onClick={e => { e.stopPropagation(); setFile(null); }}>✕ Xóa</button>
+                </div>
+              ) : (
+                <div>
+                  <div style={{fontSize:32,marginBottom:8}}>🎬</div>
+                  <div style={{fontSize:13,color:'var(--text-secondary)'}}>Kéo thả video vào đây hoặc click để chọn</div>
+                  <div style={{fontSize:11,color:'var(--text-muted)',marginTop:4}}>MP4, MOV, AVI — tối đa 2GB</div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {error && <div className="alert alert-danger" style={{marginTop:12}}>{error}</div>}
+        {busy && <div className="alert alert-warning" style={{marginTop:12}}>{statusLabel[status] || '⏳ Đang xử lý...'}</div>}
+
+        <div style={{marginTop:14}}>
+          <button className="btn btn-primary" onClick={doAnalyze} disabled={!canAnalyze}>
+            {busy ? '⏳ Đang phân tích...' : '🔍 Phân tích video'}
+          </button>
+        </div>
+
+        {result && (
+          <div style={{marginTop:20}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+              <div style={{fontWeight:700,fontSize:13}}>Kết quả phân tích</div>
+              <button className="btn btn-secondary btn-sm"
+                onClick={() => navigator.clipboard.writeText(result)}>Sao chép</button>
+            </div>
+            <AnalysisResultView text={result}/>
+          </div>
+        )}
+      </div>
+
+      {analyses.length > 0 && (
+        <div className="card">
+          <div className="card-title" style={{marginBottom:12}}>📋 Lịch sử phân tích ({analyses.length})</div>
+          {analyses.map(a => (
+            <div key={a.id} className="analysis-history-item">
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:12,color:'var(--text-secondary)',marginBottom:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}
+                  title={a.source}>🔗 {a.source}</div>
+                <div style={{fontSize:12,color:'var(--text-muted)'}}>{(a.result||'').substring(0,120)}…</div>
+              </div>
+              <div style={{display:'flex',gap:6,flexShrink:0}}>
+                <button className="btn btn-secondary btn-sm" onClick={() => setResult(a.result)}>Xem</button>
+                <button className="btn btn-danger btn-sm btn-icon"
+                  onClick={() => db.collection('analyses').doc(a.id).delete()}>🗑</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ContentTab({ apiKey }) {
+  const [activeSection, setActiveSection] = useState('video');
+  const sections = [
+    { id: 'video', icon: '📹', label: 'Phân tích video' },
+  ];
+  return (
+    <div className="content-tab-layout">
+      <aside className="content-sidebar">
+        <div className="content-sidebar-title">Content</div>
+        {sections.map(s => (
+          <div key={s.id} className={`content-sidebar-item${activeSection===s.id?' active':''}`}
+            onClick={() => setActiveSection(s.id)}>
+            <span className="content-sidebar-item-icon">{s.icon}</span>
+            {s.label}
+          </div>
+        ))}
+      </aside>
+      <div className="content-main">
+        {activeSection === 'video' && <VideoAnalysisPanel apiKey={apiKey}/>}
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [activeTab, setActiveTab] = useLocalStorage('marcomos_active_tab', 'koc');
   const [theme, setTheme] = useLocalStorage('marcomos_theme', 'light');
+  const [apiKey] = useLocalStorage('marcomos_api_key', '');
   useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
   const tabs = [
     { id: 'koc', label: '👥 KOC Database' },
-    { id: 'translation', label: '🌐 Translation' }
+    { id: 'translation', label: '🌐 Translation' },
+    { id: 'content', label: '📝 Content' },
   ];
   return (
     <div id="app">
@@ -1169,9 +1499,10 @@ function App() {
           </button>
         </div>
       </header>
-      <main className="tab-content">
+      <main className={`tab-content${activeTab==='content'?' tab-content--full':''}`}>
         {activeTab==='koc' && <KOCDatabaseTab/>}
         {activeTab==='translation' && <TranslationTab mode={TRANSLATION_MODE}/>}
+        {activeTab==='content' && <ContentTab apiKey={apiKey}/>}
       </main>
     </div>
   );
