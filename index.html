@@ -559,6 +559,7 @@ function smartClassifyKOCParts(parts) {
     const p = raw.trim();
     if (!p) continue;
     const lower = p.toLowerCase();
+    const noSpace = p.replace(/[\s\-]/g, '');
 
     if (/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(p)) {
       result.gmail = p;
@@ -566,23 +567,32 @@ function smartClassifyKOCParts(parts) {
       result.instagram = p;
     } else if (/^@[a-zA-Z0-9._]{2,40}$/.test(p)) {
       result.instagram = p;
+    } else if (/^https?:\/\//i.test(p)) {
+      result.contractLink = result.contractLink || p;
     } else if (KOC_STATUSES.includes(p)) {
       result.status = p;
-    } else if (/\b(TWD|twd|VND|vnd|đồng)\b/.test(p)) {
+    } else if (/\b(TWD|twd|VND|vnd|đồng|NT\$)\b/.test(p)) {
       result.price = p;
-    } else if (/^\d[\d\s\-]{7,18}\d$/.test(p) && p.replace(/\D/g,'').length >= 8) {
-      result.bankAccount = p;
-    } else if (/^[\d,.]+\s*[kKmM]?$/.test(p.replace(/\s/g,''))) {
+    } else if (/^(0[3-9]\d{8}|09\d{8}|\+84\d{9,10}|\+886\d{8,9})$/.test(noSpace)) {
+      // Phone number → notes
+      result.notes = result.notes ? result.notes + ' | ' + p : p;
+    } else if (/^\d+$/.test(noSpace) && noSpace.length >= 10 && !/^0[3-9]|^09/.test(noSpace)) {
+      // Long numeric string that isn't a phone → bank account
+      result.bankAccount = result.bankAccount || p;
+    } else if (/^[\d,.]+\s*[kKmM]$/.test(noSpace) || (/^[\d,.]+$/.test(noSpace) && !result.bankAccount)) {
       if (!followersFilled) { result.followers = p; followersFilled = true; }
       else { result.price = p; }
+    } else if (/[đường|phường|phố|quận|huyện|tỉnh|thành phố|xã|thị trấn]/.test(lower) ||
+               /[市區路街號樓巷]/.test(p)) {
+      result.address = p;
     } else {
       unmatched.push(p);
     }
   }
 
   if (unmatched.length > 0) result.name = unmatched[0];
-  if (unmatched.length > 1) result.address = unmatched[1];
-  if (unmatched.length > 2) result.notes = unmatched.slice(2).join(' | ');
+  if (unmatched.length > 1) result.address = result.address || unmatched[1];
+  if (unmatched.length > 2) result.notes = (result.notes ? result.notes + ' | ' : '') + unmatched.slice(2).join(' | ');
 
   return result;
 }
