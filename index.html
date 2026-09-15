@@ -1221,6 +1221,20 @@ async function uploadVideoToGemini(file, apiKey) {
   return data.file;
 }
 
+async function fetchTikTokVideo(tiktokUrl) {
+  const apiUrl = `https://www.tikwm.com/api/?url=${encodeURIComponent(tiktokUrl)}&hd=1`;
+  const res = await fetch(apiUrl);
+  if (!res.ok) throw new Error(`TikTok API lỗi: ${res.status}`);
+  const data = await res.json();
+  if (data.code !== 0) throw new Error(data.msg || 'Không lấy được video TikTok');
+  const videoUrl = data.data.hdplay || data.data.play;
+  const title = data.data.title || 'tiktok-video';
+  const videoRes = await fetch(videoUrl);
+  if (!videoRes.ok) throw new Error(`Tải video thất bại: ${videoRes.status}`);
+  const blob = await videoRes.blob();
+  return new File([blob], `${title.substring(0,40)}.mp4`, { type: 'video/mp4' });
+}
+
 async function waitForGeminiFile(fileName, apiKey) {
   for (let i = 0; i < 30; i++) {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${apiKey}`);
@@ -1305,18 +1319,29 @@ function VideoAnalysisPanel({ apiKey }) {
 
   const busy = status && status !== 'done' && status !== 'error';
   const urlVal = ytUrl.trim().toLowerCase();
-  const isNonYTLink = urlVal && !urlVal.includes('youtube.com') && !urlVal.includes('youtu.be') &&
-    (urlVal.includes('tiktok.com') || urlVal.includes('facebook.com') || urlVal.includes('fb.watch') || urlVal.includes('instagram.com'));
-  const canAnalyze = apiKey && !busy && (inputMode === 'url' ? (ytUrl.trim() && !isNonYTLink) : !!file);
+  const isYT = urlVal.includes('youtube.com') || urlVal.includes('youtu.be');
+  const isTT = urlVal.includes('tiktok.com');
+  const isFBIG = urlVal.includes('facebook.com') || urlVal.includes('fb.watch') || urlVal.includes('instagram.com');
+  const canAnalyze = apiKey && !busy && (inputMode === 'url' ? (ytUrl.trim() && !isFBIG) : !!file);
 
   const doAnalyze = async () => {
     if (!canAnalyze) return;
     setStatus('analyzing'); setError(''); setResult('');
     try {
       let analysisResult, sourceLabel;
-      if (inputMode === 'url') {
+      if (inputMode === 'url' && isYT) {
         sourceLabel = ytUrl.trim();
         analysisResult = await analyzeVideoGemini(apiKey, { youtubeUrl: ytUrl.trim() });
+      } else if (inputMode === 'url' && isTT) {
+        sourceLabel = ytUrl.trim();
+        setStatus('fetching');
+        const videoFile = await fetchTikTokVideo(ytUrl.trim());
+        setStatus('uploading');
+        const uploaded = await uploadVideoToGemini(videoFile, apiKey);
+        setStatus('processing');
+        const fileUri = await waitForGeminiFile(uploaded.name, apiKey);
+        setStatus('analyzing');
+        analysisResult = await analyzeVideoGemini(apiKey, { fileUri, mimeType: 'video/mp4' });
       } else {
         setStatus('uploading');
         const uploaded = await uploadVideoToGemini(file, apiKey);
@@ -1338,7 +1363,7 @@ function VideoAnalysisPanel({ apiKey }) {
     if (f && f.type.startsWith('video/')) setFile(f);
   };
 
-  const statusLabel = { uploading:'⬆️ Đang tải video lên...', processing:'⚙️ Gemini đang xử lý video...', analyzing:'🔍 Đang phân tích nội dung...' };
+  const statusLabel = { fetching:'🔄 Đang lấy video TikTok...', uploading:'⬆️ Đang upload lên Gemini...', processing:'⚙️ Gemini đang xử lý video...', analyzing:'🔍 Đang phân tích nội dung...' };
 
   if (!apiKey) {
     return (
@@ -1379,16 +1404,18 @@ function VideoAnalysisPanel({ apiKey }) {
                   ✅ YouTube — Gemini phân tích trực tiếp, không cần tải về.
                 </div>
               );
-              if (isTT || isFB || isIG) {
-                const name = isTT ? 'TikTok' : isFB ? 'Facebook' : 'Instagram';
+              if (isTT) return (
+                <div style={{fontSize:11,color:'var(--success)',marginTop:6}}>
+                  ✅ TikTok — app sẽ tự tải và phân tích, không cần làm thủ công.
+                </div>
+              );
+              if (isFB || isIG) {
+                const name = isFB ? 'Facebook' : 'Instagram';
                 return (
                   <div style={{fontSize:12,background:'var(--warning-light)',color:'var(--warning-text)',border:'1px solid var(--warning)',borderRadius:'var(--radius-sm)',padding:'8px 12px',marginTop:8}}>
-                    ⚠️ <strong>{name}</strong> không cho phép AI đọc video từ link trực tiếp.<br/>
+                    ⚠️ <strong>{name}</strong> yêu cầu đăng nhập để tải video — chưa hỗ trợ tự động.<br/>
                     <span style={{marginTop:4,display:'block'}}>
-                      👉 Tải video về máy → chuyển sang tab <strong>"Tải file lên"</strong> để phân tích.
-                    </span>
-                    <span style={{marginTop:2,display:'block',fontSize:11,color:'var(--text-muted)'}}>
-                      Gợi ý: dùng <strong>ssstik.io</strong> (TikTok), <strong>fbdown.net</strong> (Facebook), hoặc <strong>igram.world</strong> (Instagram) để tải.
+                      👉 Tải video về máy → dùng tab <strong>"Tải file lên"</strong> để phân tích.
                     </span>
                   </div>
                 );
