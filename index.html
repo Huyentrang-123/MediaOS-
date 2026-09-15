@@ -444,7 +444,7 @@ async function translateDirect(text, apiKey, direction = 'tw_to_vi') {
     ? `Bạn là dịch giả chuyên nghiệp về tiếng Việt thông dụng. Hãy dịch đoạn văn bản sau từ tiếng Trung phồn thể (Đài Loan) sang tiếng Việt tự nhiên, thân mật như người Việt hay nói hàng ngày (dùng "mình/bạn" thay vì "tôi", tránh dùng từ quá trang trọng). Chỉ trả về bản dịch, không giải thích, không chú thích:\n\n${text}`
     : `Bạn là dịch giả chuyên nghiệp. Hãy dịch đoạn văn bản sau từ tiếng Việt sang tiếng Trung phồn thể (Đài Loan, dùng phồn thể 繁體中文). Chỉ trả về bản dịch, không giải thích, không chú thích:\n\n${text}`;
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
