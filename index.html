@@ -546,6 +546,47 @@ function parseTSVRobust(rawText) {
   return rows;
 }
 
+function smartClassifyKOCParts(parts) {
+  const result = {
+    name: '', instagram: '', gmail: '', followers: '',
+    status: 'Gửi mail', price: '', address: '', bankAccount: '', notes: '', contractLink: '',
+    lastContact: getToday(), createdAt: new Date().toISOString()
+  };
+  const unmatched = [];
+  let followersFilled = false;
+
+  for (const raw of parts) {
+    const p = raw.trim();
+    if (!p) continue;
+    const lower = p.toLowerCase();
+
+    if (/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(p)) {
+      result.gmail = p;
+    } else if (lower.includes('instagram.com') || lower.includes('instagr.am')) {
+      result.instagram = p;
+    } else if (/^@[a-zA-Z0-9._]{2,40}$/.test(p)) {
+      result.instagram = p;
+    } else if (KOC_STATUSES.includes(p)) {
+      result.status = p;
+    } else if (/\b(TWD|twd|VND|vnd|đồng)\b/.test(p)) {
+      result.price = p;
+    } else if (/^\d[\d\s\-]{7,18}\d$/.test(p) && p.replace(/\D/g,'').length >= 8) {
+      result.bankAccount = p;
+    } else if (/^[\d,.]+\s*[kKmM]?$/.test(p.replace(/\s/g,''))) {
+      if (!followersFilled) { result.followers = p; followersFilled = true; }
+      else { result.price = p; }
+    } else {
+      unmatched.push(p);
+    }
+  }
+
+  if (unmatched.length > 0) result.name = unmatched[0];
+  if (unmatched.length > 1) result.address = unmatched[1];
+  if (unmatched.length > 2) result.notes = unmatched.slice(2).join(' | ');
+
+  return result;
+}
+
 function PasteParser({ onAdd }) {
   const [text, setText] = useState('');
   const [msg, setMsg] = useState(null);
@@ -554,22 +595,26 @@ function PasteParser({ onAdd }) {
     const hasTabs = text.includes('\t');
     const rows = hasTabs
       ? parseTSVRobust(text)
-      : text.split('\n').map(l => l.trim()).filter(Boolean).map(l => l.split('|').map(s => s.trim()));
+      : text.split('\n').map(l => l.trim()).filter(Boolean)
+            .map(l => l.includes('|') ? l.split('|') : [l]);
+
+    // Skip header row if first row contains column name keywords
+    let startRow = 0;
+    if (rows.length > 1) {
+      const firstJoined = rows[0].join('').toLowerCase();
+      if (['tên','name','instagram','gmail','follow','trạng thái'].some(k => firstJoined.includes(k)))
+        startRow = 1;
+    }
 
     let added = 0, skipped = 0;
     const kocs = [];
 
-    for (const parts of rows) {
-      if (!(parts[0] || '').trim()) { skipped++; continue; }
-      const rawStatus = (parts[4] || '').trim();
-      const status = KOC_STATUSES.includes(rawStatus) ? rawStatus : 'Gửi mail';
-      kocs.push({
-        name: (parts[0] || '').trim(), instagram: (parts[1] || '').trim(),
-        gmail: (parts[2] || '').trim(), followers: (parts[3] || '').trim(),
-        status, price: (parts[5] || '').trim(), notes: (parts[6] || '').trim(),
-        address: (parts[7] || '').trim(), bankAccount: '', contractLink: '',
-        lastContact: getToday(), createdAt: new Date().toISOString()
-      });
+    for (let i = startRow; i < rows.length; i++) {
+      const parts = rows[i].map(s => (s || '').trim()).filter(Boolean);
+      if (!parts.length) { skipped++; continue; }
+      const koc = smartClassifyKOCParts(parts);
+      if (!koc.name && !koc.instagram && !koc.gmail) { skipped++; continue; }
+      kocs.push(koc);
       added++;
     }
 
@@ -584,8 +629,9 @@ function PasteParser({ onAdd }) {
     <div className="card">
       <div className="card-title" style={{marginBottom:6}}>&#128203; Nhập dữ liệu KOC</div>
       <div style={{fontSize:12,color:'var(--text-secondary)',marginBottom:10,lineHeight:1.6}}>
-        Có thể <strong>copy thẳng từ Google Sheets</strong> rồi dán vào đây.<br/>
-        Hoặc nhập thủ công: <code style={{background:'var(--surface-3)',padding:'1px 6px',borderRadius:4}}>Tên | Link IG | Gmail | Follow IG | Trạng thái | Báo giá | Note | Địa chỉ</code>
+        Hệ thống <strong>tự nhận diện</strong> từng trường — không cần theo thứ tự.<br/>
+        Dán từ Google Sheets hoặc nhập thủ công, phân cách bằng <code style={{background:'var(--surface-3)',padding:'1px 6px',borderRadius:4}}>|</code>. Ví dụ:<br/>
+        <code style={{background:'var(--surface-3)',padding:'1px 6px',borderRadius:4}}>Nguyễn Thị A | @ten_ig | abc@gmail.com | 50K | 5000 TWD</code>
       </div>
       <textarea className="form-textarea" value={text} onChange={e => setText(e.target.value)}
         placeholder="Dán dữ liệu từ Google Sheets vào đây..." style={{minHeight:100}}/>
