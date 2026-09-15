@@ -99,35 +99,31 @@
     .app-header .btn-ghost { color: rgba(255,255,255,0.85); }
     .app-header .btn-ghost:hover:not(:disabled) { background: rgba(255,255,255,0.15); color: #ffffff; }
 
-    .tab-nav {
-      background: var(--surface-1);
-      border-bottom: 1px solid var(--border);
-      padding: 0 16px;
+    .header-tabs {
       display: flex;
+      align-items: center;
       gap: 2px;
+      flex: 1;
+      padding: 0 12px;
       overflow-x: auto;
-      position: sticky;
-      top: 56px;
-      z-index: 99;
     }
-    .tab-nav::-webkit-scrollbar { height: 0; }
+    .header-tabs::-webkit-scrollbar { height: 0; }
 
     .tab-btn {
-      padding: 14px 16px;
+      padding: 7px 14px;
       border: none;
       background: none;
       cursor: pointer;
-      color: var(--text-secondary);
+      color: rgba(255,255,255,0.75);
       font-size: 13px;
       font-weight: 500;
       white-space: nowrap;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
-      transition: color 0.15s, border-color 0.15s;
+      border-radius: 6px;
+      transition: all 0.15s;
       font-family: inherit;
     }
-    .tab-btn:hover { color: var(--text-primary); }
-    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+    .tab-btn.active { background: rgba(255,255,255,0.22); color: #fff; font-weight: 700; }
 
     .tab-content {
       flex: 1;
@@ -1020,6 +1016,12 @@ function App() {
             <div className="app-logo-sub">Marcom Department</div>
           </div>
         </div>
+        <nav className="header-tabs">
+          {tabs.map(tab => (
+            <button key={tab.id} className={`tab-btn${activeTab===tab.id?' active':''}`}
+              onClick={() => setActiveTab(tab.id)}>{tab.label}</button>
+          ))}
+        </nav>
         <div className="header-actions">
           <button className="btn btn-ghost btn-sm btn-icon"
             onClick={() => setTheme(t => t==='light'?'dark':'light')}
@@ -1028,12 +1030,6 @@ function App() {
           </button>
         </div>
       </header>
-      <nav className="tab-nav">
-        {tabs.map(tab => (
-          <button key={tab.id} className={`tab-btn${activeTab===tab.id?' active':''}`}
-            onClick={() => setActiveTab(tab.id)}>{tab.label}</button>
-        ))}
-      </nav>
       <main className="tab-content">
         {activeTab==='koc' && <KOCDatabaseTab/>}
         {activeTab==='translation' && <TranslationTab mode={TRANSLATION_MODE}/>}
